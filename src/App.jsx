@@ -372,7 +372,7 @@ export default function App() {
     if (successMessage) { const timer = setTimeout(() => setSuccessMessage(''), 4000); return () => clearTimeout(timer); }
   }, [successMessage]);
 
-  // 1. 初始化数据加载
+  // 1. 初始化数据加载（token 变化时重新加载，确保登录后立即加载数据）
   useEffect(() => {
     let isMounted = true;
 
@@ -390,6 +390,9 @@ export default function App() {
     };
 
     const loadLocalData = async () => {
+      // 没有 token 时不请求
+      if (!authToken) { setDataLoaded(true); return; }
+      
       try {
         const res = await authFetch(`${API_BASE}/data`);
         if (res.ok) {
@@ -403,10 +406,12 @@ export default function App() {
       } catch (e) { console.warn("无法连接到后端服务，将使用初始状态。"); } 
       finally { if (isMounted) setDataLoaded(true); }
     };
+    
+    setDataLoaded(false);
     loadLocalData();
 
     return () => { isMounted = false; };
-  }, []);
+  }, [authToken, authFetch]);
 
   // 2. 更新活跃工作区的完整数据（用于加载快照等）
   const updateActiveWorkspace = ({ inputs: newInputs, separator: newSeparator, name, isDirty }) => {
@@ -436,6 +441,30 @@ export default function App() {
     }, 1000);
     return () => clearTimeout(timer);
   }, [workspaces, activeWorkspaceId, dataLoaded]);
+
+  // 4. 自动同步快照到后端
+  useEffect(() => {
+    if (!dataLoaded || !authToken) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(savedPrompts) });
+      } catch (e) { console.error("保存快照失败", e); }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [savedPrompts, dataLoaded, authToken, authFetch]);
+
+  // 5. 自动同步预设到后端
+  useEffect(() => {
+    if (!dataLoaded || !authToken) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        await authFetch(`${API_BASE}/presets`, { method: 'POST', body: JSON.stringify(presets) });
+      } catch (e) { console.error("保存预设失败", e); }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [presets, dataLoaded, authToken, authFetch]);
 
   // ---------------- 多标签页管理逻辑 ----------------
   const handleAddTab = () => {
