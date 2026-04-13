@@ -43,7 +43,7 @@ git push -u origin main
 
 推送后 GitHub Actions 会自动开始构建，构建完成后镜像会推送到：
 ```
-你的DockerHub用户名/prompt-builder:latest
+你的DockerHub用户名/promptly:latest
 ```
 
 同时构建 **amd64 + arm64** 双架构，x86 路由器和 ARM 设备都能用。
