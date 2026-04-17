@@ -426,6 +426,10 @@ export default function App() {
   // 3. 自动同步工作区到后端
   useEffect(() => {
     if (!dataLoaded) return;
+    if (!authToken) {
+      setSyncStatus('synced');
+      return;
+    }
 
     setSyncStatus('syncing');
     const timer = setTimeout(async () => {
@@ -435,12 +439,13 @@ export default function App() {
           activeWorkspaceId 
         };
         const res = await authFetch(`${API_BASE}/workspace`, { method: 'POST', body: JSON.stringify(cleanPayload) });
+        if (res.status === 401) { setCurrentUser(null); setAuthToken(null); return; }
         if (!res.ok) throw new Error("Sync failed");
         setSyncStatus('synced');
       } catch (e) { setSyncStatus('error'); }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [workspaces, activeWorkspaceId, dataLoaded]);
+  }, [workspaces, activeWorkspaceId, dataLoaded, authToken, authFetch]);
 
   // 4. 自动同步快照到后端
   useEffect(() => {
@@ -1014,7 +1019,7 @@ export default function App() {
             </div>
             <div className="mb-6">
               <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>密码</label>
-              <input type="password" value={authForm.password} onChange={e => setAuthForm(prev => ({ ...prev, password: e.target.value }))} placeholder="至少4个字符" autoComplete={authView === 'login' ? 'current-password' : 'new-password'} className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-sm ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'}`} />
+              <input type="password" value={authForm.password} onChange={e => setAuthForm(prev => ({ ...prev, password: e.target.value }))} placeholder="至少8位，包含字母和数字" autoComplete={authView === 'login' ? 'current-password' : 'new-password'} className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-sm ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'}`} />
             </div>
             <button type="submit" disabled={authLoading} className={`w-full py-3 text-sm font-bold text-white rounded-xl transition-all active:scale-[0.98] disabled:opacity-50 ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20 shadow-lg' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100 shadow-lg'}`}>
               {authLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (authView === 'login' ? '登 录' : '注 册')}
@@ -1756,7 +1761,7 @@ export default function App() {
             <h3 className={`font-bold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}><Lock className="w-5 h-5 text-blue-500" /> 修改密码</h3>
             <div className="space-y-3 mb-6">
               <input type="password" value={changePasswordForm.oldPassword} onChange={e => setChangePasswordForm(prev => ({ ...prev, oldPassword: e.target.value }))} placeholder="旧密码" className={`w-full px-4 py-2.5 rounded-lg border outline-none text-sm ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-blue-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500'}`} />
-              <input type="password" value={changePasswordForm.newPassword} onChange={e => setChangePasswordForm(prev => ({ ...prev, newPassword: e.target.value }))} placeholder="新密码（至少4个字符）" className={`w-full px-4 py-2.5 rounded-lg border outline-none text-sm ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-blue-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500'}`} />
+              <input type="password" value={changePasswordForm.newPassword} onChange={e => setChangePasswordForm(prev => ({ ...prev, newPassword: e.target.value }))} placeholder="新密码（至少8位，包含字母和数字）" className={`w-full px-4 py-2.5 rounded-lg border outline-none text-sm ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-blue-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500'}`} />
             </div>
             {authError && showChangePassword && (
               <div className={`mb-4 p-2 rounded-lg text-xs font-medium ${isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-red-600'}`}>{authError}</div>
