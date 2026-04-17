@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GripVertical, Plus, Copy, Check, Trash2, Settings2, Eye, EyeOff, Save, Bookmark, X, Clock, FileUp, Database, Loader2, ServerOff, RefreshCw, CheckCircle2, RotateCcw, AlertTriangle, Download, Upload, AlignLeft, LayoutGrid, Palette, Library, FolderPlus, ChevronUp, ChevronDown, CloudOff, Sun, Moon, Languages, Settings, Minus, FileText, LogOut, User, Lock, UserPlus } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { GripVertical, Plus, Copy, Check, Trash2, Settings2, Eye, EyeOff, Save, Bookmark, X, Clock, FileUp, Database, Loader2, ServerOff, RefreshCw, CheckCircle2, RotateCcw, AlertTriangle, Download, Upload, AlignLeft, LayoutGrid, Palette, Library, FolderPlus, ChevronUp, ChevronDown, CloudOff, Sun, Moon, Languages, Settings, Minus, FileText, LogOut, User, Lock, UserPlus, Search, Folder, MoreVertical } from 'lucide-react';
 
 // 生成唯一ID
 const generateId = () => 'id-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
@@ -15,6 +15,95 @@ const BG_COLORS = [
   { label: '浅紫', value: 'bg-purple-100' },
   { label: '浅粉', value: 'bg-pink-100' }
 ];
+
+const DEFAULT_FOLDER_COLOR = 'blue';
+const DEFAULT_FOLDER_ICON = 'folder';
+
+const FOLDER_COLOR_OPTIONS = [
+  {
+    id: 'blue',
+    label: 'Blue',
+    accent: '#3b82f6',
+    lightIcon: 'bg-blue-100 text-blue-700 border-blue-200',
+    darkIcon: 'bg-blue-950/40 text-blue-300 border-blue-900/50',
+    lightRow: 'border-blue-200 bg-blue-50/80',
+    darkRow: 'border-blue-900/50 bg-blue-950/20',
+    lightBadge: 'bg-blue-50 text-blue-700 border-blue-200',
+    darkBadge: 'bg-blue-950/30 text-blue-300 border-blue-900/50'
+  },
+  {
+    id: 'green',
+    label: 'Green',
+    accent: '#22c55e',
+    lightIcon: 'bg-green-100 text-green-700 border-green-200',
+    darkIcon: 'bg-green-950/40 text-green-300 border-green-900/50',
+    lightRow: 'border-green-200 bg-green-50/80',
+    darkRow: 'border-green-900/50 bg-green-950/20',
+    lightBadge: 'bg-green-50 text-green-700 border-green-200',
+    darkBadge: 'bg-green-950/30 text-green-300 border-green-900/50'
+  },
+  {
+    id: 'orange',
+    label: 'Orange',
+    accent: '#f97316',
+    lightIcon: 'bg-orange-100 text-orange-700 border-orange-200',
+    darkIcon: 'bg-orange-950/40 text-orange-300 border-orange-900/50',
+    lightRow: 'border-orange-200 bg-orange-50/80',
+    darkRow: 'border-orange-900/50 bg-orange-950/20',
+    lightBadge: 'bg-orange-50 text-orange-700 border-orange-200',
+    darkBadge: 'bg-orange-950/30 text-orange-300 border-orange-900/50'
+  },
+  {
+    id: 'rose',
+    label: 'Rose',
+    accent: '#f43f5e',
+    lightIcon: 'bg-rose-100 text-rose-700 border-rose-200',
+    darkIcon: 'bg-rose-950/40 text-rose-300 border-rose-900/50',
+    lightRow: 'border-rose-200 bg-rose-50/80',
+    darkRow: 'border-rose-900/50 bg-rose-950/20',
+    lightBadge: 'bg-rose-50 text-rose-700 border-rose-200',
+    darkBadge: 'bg-rose-950/30 text-rose-300 border-rose-900/50'
+  },
+  {
+    id: 'violet',
+    label: 'Violet',
+    accent: '#8b5cf6',
+    lightIcon: 'bg-violet-100 text-violet-700 border-violet-200',
+    darkIcon: 'bg-violet-950/40 text-violet-300 border-violet-900/50',
+    lightRow: 'border-violet-200 bg-violet-50/80',
+    darkRow: 'border-violet-900/50 bg-violet-950/20',
+    lightBadge: 'bg-violet-50 text-violet-700 border-violet-200',
+    darkBadge: 'bg-violet-950/30 text-violet-300 border-violet-900/50'
+  },
+  {
+    id: 'slate',
+    label: 'Slate',
+    accent: '#64748b',
+    lightIcon: 'bg-slate-100 text-slate-700 border-slate-200',
+    darkIcon: 'bg-slate-900/60 text-slate-300 border-slate-700/60',
+    lightRow: 'border-slate-200 bg-slate-50/80',
+    darkRow: 'border-slate-800 bg-slate-900/40',
+    lightBadge: 'bg-slate-50 text-slate-700 border-slate-200',
+    darkBadge: 'bg-slate-900/40 text-slate-300 border-slate-700/60'
+  }
+];
+
+const FOLDER_ICON_OPTIONS = [
+  { id: 'folder', label: 'Folder', icon: Folder },
+  { id: 'bookmark', label: 'Bookmark', icon: Bookmark },
+  { id: 'file-text', label: 'Text', icon: FileText },
+  { id: 'library', label: 'Library', icon: Library },
+  { id: 'palette', label: 'Palette', icon: Palette },
+  { id: 'align-left', label: 'List', icon: AlignLeft }
+];
+
+const getFolderColorOption = (colorId) => (
+  FOLDER_COLOR_OPTIONS.find(option => option.id === colorId) || FOLDER_COLOR_OPTIONS[0]
+);
+
+const getFolderIconOption = (iconId) => (
+  FOLDER_ICON_OPTIONS.find(option => option.id === iconId) || FOLDER_ICON_OPTIONS[0]
+);
 
 const getColorClasses = (colorVal, isDarkMode) => {
   if (!colorVal || colorVal === 'bg-white') return isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200';
@@ -123,6 +212,74 @@ const syncTextFromTags = (tags) => {
   }).join('');
 };
 
+const normalizeTagDelimitersForOrder = (tags = []) => {
+  if (!Array.isArray(tags) || tags.length === 0) return [];
+
+  return tags.map((tag, index) => {
+    const delimiter = typeof tag.delimiter === 'string' ? tag.delimiter : '';
+
+    if (index === tags.length - 1) {
+      return { ...tag, delimiter: delimiter.replace(/[,，。\r\n]+$/g, '') };
+    }
+
+    if (/[,，。\r\n]/.test(delimiter)) return { ...tag, delimiter };
+    return { ...tag, delimiter: `${delimiter}, ` };
+  });
+};
+
+const buildOutputTextFromInputs = (inputList = [], separator = '\\n\\n') => {
+  const actualSeparator = (separator || '\\n\\n').replace(/\\n/g, '\n');
+
+  return (inputList || [])
+    .filter(input => input.isActive !== false)
+    .map((input, inputIndex) => {
+      const tempTags = input.isTextMode
+        ? parseTextToTags(input.text || '')
+        : (Array.isArray(input.tags) ? input.tags : parseTextToTags(input.text || ''));
+
+      let joined = tempTags
+        .filter(t => t.isActive !== false)
+        .map((t, idx, arr) => {
+          let s = removeGarbage(t.rawText !== undefined ? t.rawText : t.text).replace(/(^\s*)~~([\s\S]*?)~~(\s*$)/, '$1$2$3');
+          if (idx === 0) s = s.trimStart();
+          let d = t.delimiter !== undefined ? t.delimiter : (idx < arr.length - 1 ? ', ' : '');
+          if (idx === arr.length - 1) d = d.replace(/[,，。\r\n\s]+$/, '');
+          return s + d;
+        })
+        .join('')
+        .trim();
+
+      if (joined.length > 0 && input.showTitle) {
+        joined = `${input.title || `片段 ${inputIndex + 1}`}\n${joined}`;
+      }
+      return joined;
+    })
+    .filter(text => text.length > 0)
+    .join(actualSeparator);
+};
+
+const normalizeSnapshotRecord = (snapshot) => {
+  const folderId = typeof snapshot.folderId === 'string' && snapshot.folderId.trim()
+    ? snapshot.folderId.trim()
+    : null;
+
+  return {
+    ...snapshot,
+    inputs: Array.isArray(snapshot.inputs) ? snapshot.inputs : [],
+    folderId,
+  };
+};
+
+const normalizeSavedPromptsList = (list) => (Array.isArray(list) ? list.map(normalizeSnapshotRecord) : []);
+
+const extractImportedSnapshots = (importedData) => {
+  if (Array.isArray(importedData)) return normalizeSavedPromptsList(importedData);
+  if (importedData?.type === 'prompt_builder_export_v2' && Array.isArray(importedData.snapshots)) {
+    return normalizeSavedPromptsList(importedData.snapshots);
+  }
+  return [];
+};
+
 const sanitizeInputs = (loadedInputs) => {
   return loadedInputs.map(input => {
     const isTextMode = input.isTextMode || false;
@@ -174,6 +331,66 @@ const createDefaultWorkspace = (nameIndex) => ({
 // ================= 常量 =================
 const API_BASE = '/api';
 
+// ================= 前端日志系统 =================
+const LOG_STORAGE_KEY = 'promptly_app_logs';
+const LOG_MAX_ENTRIES = 200;
+
+const appLogger = {
+  _getLogs() {
+    try { return JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]'); } catch { return []; }
+  },
+  _save(logs) {
+    localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs.slice(-LOG_MAX_ENTRIES)));
+  },
+  _write(level, source, message, detail) {
+    const entry = { ts: new Date().toISOString(), level, source, message, detail: detail || '' };
+    const logs = this._getLogs();
+    logs.push(entry);
+    this._save(logs);
+    if (level === 'error') console.error(`[Promptly:${source}]`, message, detail || '');
+    else if (level === 'warn') console.warn(`[Promptly:${source}]`, message, detail || '');
+    else console.log(`[Promptly:${source}]`, message, detail || '');
+  },
+  info(source, message, detail) { this._write('info', source, message, detail); },
+  warn(source, message, detail) { this._write('warn', source, message, detail); },
+  error(source, message, detail) { this._write('error', source, message, detail); },
+  getRecent(count = 50) { const logs = this._getLogs(); return logs.slice(-count); },
+  clear() { localStorage.removeItem(LOG_STORAGE_KEY); },
+};
+
+// 全局错误捕获
+if (typeof window !== 'undefined') {
+  window.onerror = (msg, source, lineno, colno, error) => {
+    appLogger.error('global', String(msg), `${source}:${lineno}:${colno} ${error?.stack || ''}`);
+    return false;
+  };
+  window.addEventListener('unhandledrejection', (e) => {
+    appLogger.error('promise', e.reason?.message || String(e.reason), e.reason?.stack || '');
+  });
+}
+
+// ErrorBoundary 组件
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, errorInfo: '' }; }
+  static getDerivedStateFromError(error) { return { hasError: true, errorInfo: error.message }; }
+  componentDidCatch(error, info) {
+    appLogger.error('react', error.message, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 32, textAlign: 'center', color: '#ef4444' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>应用发生了错误</h2>
+          <p style={{ fontSize: 13, color: '#999', marginBottom: 16, wordBreak: 'break-all' }}>{this.state.errorInfo}</p>
+          <button onClick={() => { this.setState({ hasError: false, errorInfo: '' }); }} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer', fontSize: 13 }}>重试</button>
+          <button onClick={() => { appLogger.clear(); window.location.reload(); }} style={{ marginLeft: 8, padding: '8px 20px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer', fontSize: 13 }}>清空日志并刷新</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   // ---------------- 认证状态管理 ----------------
   const [currentUser, setCurrentUser] = useState(() => {
@@ -204,12 +421,17 @@ export default function App() {
     }
   }, [currentUser, authToken]);
 
-  // 带 Token 的 fetch 封装
+  // 带 Token 的 fetch 封装（自动记录失败请求到日志）
   const authFetch = useCallback((url, options = {}) => {
     const headers = { ...options.headers };
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
     if (!headers['Content-Type'] && options.body) headers['Content-Type'] = 'application/json';
-    return fetch(url, { ...options, headers });
+    const method = options.method || 'GET';
+    const promise = fetch(url, { ...options, headers });
+    promise.catch(err => {
+      appLogger.error('network', `${method} ${url} 网络错误`, err.message);
+    });
+    return promise;
   }, [authToken]);
 
   // 登录处理
@@ -306,6 +528,7 @@ export default function App() {
   const [draggedTabId, setDraggedTabId] = useState(null);
 
   const [savedPrompts, setSavedPrompts] = useState([]);
+  const [folders, setFolders] = useState([]);
   const [presets, setPresets] = useState([]);
 
   // UI 交互状态
@@ -320,7 +543,9 @@ export default function App() {
   const [isPresetDrawerOpen, setIsPresetDrawerOpen] = useState(false); 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false); 
   const [isTransConfigModalOpen, setIsTransConfigModalOpen] = useState(false); 
+  const [isLogPanelOpen, setIsLogPanelOpen] = useState(false);
   const [exportOptions, setExportOptions] = useState({ workspaces: true, snapshots: true, presets: true, settings: true });
+  const [pendingImportPayload, setPendingImportPayload] = useState(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false); 
   const [saveTitle, setSaveTitle] = useState('');
@@ -335,6 +560,34 @@ export default function App() {
   const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
   const [conflictTarget, setConflictTarget] = useState(null);
   const saveInputRef = useRef(null);
+  const [hoveredSnapshotId, setHoveredSnapshotId] = useState(null);
+  const [snapshotPreviewPosition, setSnapshotPreviewPosition] = useState(null);
+  const [snapshotSearchQuery, setSnapshotSearchQuery] = useState('');
+  const [isSnapshotBatchMode, setIsSnapshotBatchMode] = useState(false);
+  const [selectedSnapshotIds, setSelectedSnapshotIds] = useState([]);
+  const [collapsedFolderIds, setCollapsedFolderIds] = useState(() => {
+    try { const v = localStorage.getItem('promptly_collapsed_folders'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [editingFolderId, setEditingFolderId] = useState(null);
+  const [editingFolderName, setEditingFolderName] = useState('');
+  const [activeFolderStylePickerId, setActiveFolderStylePickerId] = useState(null);
+  const [folderStylePickerPos, setFolderStylePickerPos] = useState(null);
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const [folderPickerSnapshotIds, setFolderPickerSnapshotIds] = useState([]);
+  // folderPickerTarget: 'snapshot' | 'preset'
+  const [folderPickerTarget, setFolderPickerTarget] = useState('snapshot');
+  const [folderPickerCreating, setFolderPickerCreating] = useState(false);
+  const [folderPickerNewName, setFolderPickerNewName] = useState('');
+  const [folderPickerDefaultName, setFolderPickerDefaultName] = useState('');
+  const [folderDeleteTarget, setFolderDeleteTarget] = useState(null);
+  // 预设库状态（对标快照列表）
+  const [presetSearchQuery, setPresetSearchQuery] = useState('');
+  const [isPresetBatchMode, setIsPresetBatchMode] = useState(false);
+  const [selectedPresetIds, setSelectedPresetIds] = useState([]);
+  const [collapsedPresetFolderIds, setCollapsedPresetFolderIds] = useState(() => {
+    try { const v = localStorage.getItem('promptly_collapsed_preset_folders'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const snapshotPreviewCloseTimeoutRef = useRef(null);
 
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -343,6 +596,149 @@ export default function App() {
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId) || workspaces[0];
   const inputs = activeWorkspace.inputs;
   const separator = activeWorkspace.separator;
+  const selectedSnapshotIdSet = useMemo(() => new Set(selectedSnapshotIds), [selectedSnapshotIds]);
+  const collapsedFolderIdSet = useMemo(() => new Set(collapsedFolderIds), [collapsedFolderIds]);
+
+  // 折叠状态持久化
+  useEffect(() => {
+    try { localStorage.setItem('promptly_collapsed_folders', JSON.stringify(collapsedFolderIds)); } catch {}
+  }, [collapsedFolderIds]);
+  const snapshotSearchKeyword = snapshotSearchQuery.trim().toLowerCase();
+  const isSnapshotSearchActive = snapshotSearchKeyword.length > 0;
+  const snapshotPreviewMap = useMemo(() => {
+    return savedPrompts.reduce((acc, snapshot) => {
+      acc[snapshot.id] = buildOutputTextFromInputs(snapshot.inputs || [], snapshot.separator || '\n\n');
+      return acc;
+    }, {});
+  }, [savedPrompts]);
+  const matchedSavedPrompts = useMemo(() => {
+    if (!isSnapshotSearchActive) return savedPrompts;
+
+    return savedPrompts.filter(snapshot => {
+      const title = (snapshot.title || '').toLowerCase();
+      const preview = (snapshotPreviewMap[snapshot.id] || '').toLowerCase();
+      return title.includes(snapshotSearchKeyword) || preview.includes(snapshotSearchKeyword);
+    });
+  }, [savedPrompts, snapshotPreviewMap, isSnapshotSearchActive, snapshotSearchKeyword]);
+  const groupedFilteredSavedPrompts = useMemo(() => {
+    const folderMap = new Map();
+    const ungrouped = [];
+
+    // 从 folders 实体构建分组框架（仅快照 scope）
+    folders.filter(f => !f.scope || f.scope === 'snapshot').forEach(folder => {
+      folderMap.set(folder.id, {
+        folderId: folder.id,
+        folderName: folder.name,
+        folderColor: folder.color || DEFAULT_FOLDER_COLOR,
+        folderIcon: folder.icon || DEFAULT_FOLDER_ICON,
+        totalCount: 0,
+        matchedCount: 0,
+        items: []
+      });
+    });
+
+    // 计算 totalCount（基于全量快照）
+    savedPrompts.forEach(snapshot => {
+      if (snapshot.folderId && folderMap.has(snapshot.folderId)) {
+        folderMap.get(snapshot.folderId).totalCount += 1;
+      }
+    });
+
+    // 填充 matchedCount 和 items（基于搜索过滤后的快照）
+    matchedSavedPrompts.forEach(snapshot => {
+      if (snapshot.folderId && folderMap.has(snapshot.folderId)) {
+        const group = folderMap.get(snapshot.folderId);
+        group.matchedCount += 1;
+        group.items.push(snapshot);
+        return;
+      }
+      ungrouped.push(snapshot);
+    });
+
+    return {
+      folders: Array.from(folderMap.values())
+        .filter(group => !isSnapshotSearchActive || group.items.length > 0)
+        .map(group => ({
+          ...group,
+          isExpanded: isSnapshotSearchActive || !collapsedFolderIdSet.has(group.folderId)
+        })),
+      ungrouped
+    };
+  }, [folders, savedPrompts, matchedSavedPrompts, isSnapshotSearchActive, collapsedFolderIdSet]);
+  const visibleSnapshotIds = useMemo(() => {
+    const ids = [...groupedFilteredSavedPrompts.ungrouped.map(snapshot => snapshot.id)];
+
+    groupedFilteredSavedPrompts.folders.forEach(group => {
+      if (!group.isExpanded) return;
+      group.items.forEach(snapshot => ids.push(snapshot.id));
+    });
+
+    return ids;
+  }, [groupedFilteredSavedPrompts]);
+  const allVisibleSnapshotsSelected = useMemo(() => {
+    return visibleSnapshotIds.length > 0 && visibleSnapshotIds.every(id => selectedSnapshotIdSet.has(id));
+  }, [visibleSnapshotIds, selectedSnapshotIdSet]);
+
+  // ======== 预设库计算属性（对标快照列表）========
+  const selectedPresetIdSet = useMemo(() => new Set(selectedPresetIds), [selectedPresetIds]);
+  const collapsedPresetFolderIdSet = useMemo(() => new Set(collapsedPresetFolderIds), [collapsedPresetFolderIds]);
+
+  useEffect(() => {
+    try { localStorage.setItem('promptly_collapsed_preset_folders', JSON.stringify(collapsedPresetFolderIds)); } catch {}
+  }, [collapsedPresetFolderIds]);
+
+  const presetSearchKeyword = presetSearchQuery.trim().toLowerCase();
+  const isPresetSearchActive = presetSearchKeyword.length > 0;
+
+  const matchedPresets = useMemo(() => {
+    if (!isPresetSearchActive) return presets;
+    return presets.filter(p => {
+      const title = (p.title || '').toLowerCase();
+      const text = (p.text || '').toLowerCase();
+      const tagStr = (p.tags && p.tags.length > 0 ? p.tags.map(t => t.text).join(' ') : '').toLowerCase();
+      return title.includes(presetSearchKeyword) || text.includes(presetSearchKeyword) || tagStr.includes(presetSearchKeyword);
+    });
+  }, [presets, isPresetSearchActive, presetSearchKeyword]);
+
+  const groupedFilteredPresets = useMemo(() => {
+    const folderMap = new Map();
+    const ungrouped = [];
+    // 仅显示预设 scope 的文件夹
+    folders.filter(f => f.scope === 'preset').forEach(folder => {
+      folderMap.set(folder.id, {
+        folderId: folder.id, folderName: folder.name,
+        folderColor: folder.color || DEFAULT_FOLDER_COLOR, folderIcon: folder.icon || DEFAULT_FOLDER_ICON,
+        totalCount: 0, matchedCount: 0, items: []
+      });
+    });
+    presets.forEach(p => { if (p.folderId && folderMap.has(p.folderId)) folderMap.get(p.folderId).totalCount += 1; });
+    matchedPresets.forEach(p => {
+      if (p.folderId && folderMap.has(p.folderId)) {
+        const group = folderMap.get(p.folderId);
+        group.matchedCount += 1;
+        group.items.push(p);
+      } else { ungrouped.push(p); }
+    });
+    return {
+      folders: Array.from(folderMap.values()).filter(g => !isPresetSearchActive || g.items.length > 0)
+        .map(g => ({ ...g, isExpanded: isPresetSearchActive || !collapsedPresetFolderIdSet.has(g.folderId) })),
+      ungrouped
+    };
+  }, [folders, presets, matchedPresets, isPresetSearchActive, collapsedPresetFolderIdSet]);
+
+  const visiblePresetIds = useMemo(() => {
+    const ids = [...groupedFilteredPresets.ungrouped.map(p => p.id)];
+    groupedFilteredPresets.folders.forEach(group => { if (!group.isExpanded) return; group.items.forEach(p => ids.push(p.id)); });
+    return ids;
+  }, [groupedFilteredPresets]);
+
+  const allVisiblePresetsSelected = useMemo(() =>
+    visiblePresetIds.length > 0 && visiblePresetIds.every(id => selectedPresetIdSet.has(id)),
+  [visiblePresetIds, selectedPresetIdSet]);
+
+  const hoveredSnapshot = useMemo(() => {
+    return savedPrompts.find(snapshot => snapshot.id === hoveredSnapshotId) || null;
+  }, [savedPrompts, hoveredSnapshotId]);
 
   const setInputs = (payload) => {
     setWorkspaces(prevWorkspaces => prevWorkspaces.map(w => {
@@ -372,6 +768,32 @@ export default function App() {
     if (successMessage) { const timer = setTimeout(() => setSuccessMessage(''), 4000); return () => clearTimeout(timer); }
   }, [successMessage]);
 
+  useEffect(() => {
+    if (!dataLoaded) return;
+    setSelectedSnapshotIds(prev => prev.filter(id => savedPrompts.some(snapshot => snapshot.id === id)));
+    const existingFolderIds = new Set(folders.map(f => f.id));
+
+    setCollapsedFolderIds(prev => prev.filter(id => existingFolderIds.has(id)));
+
+    if (editingFolderId && !existingFolderIds.has(editingFolderId)) {
+      setEditingFolderId(null);
+      setEditingFolderName('');
+    }
+
+    if (activeFolderStylePickerId && !existingFolderIds.has(activeFolderStylePickerId)) {
+      setActiveFolderStylePickerId(null);
+      setFolderStylePickerPos(null);
+    }
+  }, [savedPrompts, folders, dataLoaded]);
+
+  useEffect(() => {
+    return () => {
+      if (snapshotPreviewCloseTimeoutRef.current) {
+        clearTimeout(snapshotPreviewCloseTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // 1. 初始化数据加载（token 变化时重新加载，确保登录后立即加载数据）
   useEffect(() => {
     let isMounted = true;
@@ -398,12 +820,84 @@ export default function App() {
         if (res.ok) {
           const data = await res.json();
           processLoadedWorkspace(data);
-          if (data.savedPrompts) setSavedPrompts(data.savedPrompts);
-          if (data.presets) setPresets(data.presets);
+          if (data.savedPrompts) setSavedPrompts(normalizeSavedPromptsList(data.savedPrompts));
+          // scope 迁移映射表：旧 folderId → 新 preset-scope folderId
+          const folderIdMigrationMap = new Map();
+
+          if (data.folders && Array.isArray(data.folders)) {
+            // 去重：同 id 保留第一个，同 name+scope 也保留第一个
+            const seenIds = new Set();
+            const seenNameScopes = new Set();
+            const deduped = data.folders.filter(f => {
+              const nameScopeKey = `${f.name.trim().toLowerCase()}|||${f.scope || 'snapshot'}`;
+              if (seenIds.has(f.id) || seenNameScopes.has(nameScopeKey)) return false;
+              seenIds.add(f.id);
+              seenNameScopes.add(nameScopeKey);
+              return true;
+            });
+            // scope 迁移：旧文件夹没有 scope 字段，根据引用情况分配
+            const snapshotFolderIds = new Set((data.savedPrompts || []).map(s => s.folderId).filter(Boolean));
+            const presetFolderIds = new Set((data.presets || []).map(p => p.folderId).filter(Boolean));
+            const migratedFolders = [];
+            deduped.forEach(f => {
+              if (f.scope) { migratedFolders.push(f); return; } // 已有 scope，保持
+              const isSnapshotRef = snapshotFolderIds.has(f.id);
+              const isPresetRef = presetFolderIds.has(f.id);
+              if (isSnapshotRef && isPresetRef) {
+                // 两边都引用：复制一份给 preset，原文件夹归 snapshot
+                const newPresetFolderId = generateId();
+                migratedFolders.push({ ...f, scope: 'snapshot' });
+                migratedFolders.push({ ...f, id: newPresetFolderId, scope: 'preset' });
+                folderIdMigrationMap.set(f.id, newPresetFolderId);
+              } else if (isPresetRef) {
+                migratedFolders.push({ ...f, scope: 'preset' });
+              } else {
+                migratedFolders.push({ ...f, scope: 'snapshot' });
+              }
+            });
+            setFolders(migratedFolders);
+          } else if (data.savedPrompts) {
+            // 旧数据迁移：从快照中提取文件夹信息
+            const folderMap = new Map();
+            data.savedPrompts.forEach(snapshot => {
+              if (snapshot.folderId && snapshot.folderName) {
+                if (!folderMap.has(snapshot.folderId)) {
+                  folderMap.set(snapshot.folderId, {
+                    id: snapshot.folderId,
+                    name: snapshot.folderName,
+                    color: snapshot.folderColor || DEFAULT_FOLDER_COLOR,
+                    icon: snapshot.folderIcon || DEFAULT_FOLDER_ICON,
+                    scope: 'snapshot',
+                  });
+                }
+              }
+            });
+            if (folderMap.size > 0) setFolders(Array.from(folderMap.values()));
+          }
+          if (data.presets) {
+            // 预设按 id + 内容签名 双重去重（修复重复导入导致的重复项）
+            const seenIds = new Set();
+            const seenSignatures = new Set();
+            const deduped = data.presets.filter(p => {
+              const idKey = p.id;
+              const sigKey = `${p.title || ''}|||${p.text || ''}`;
+              if (seenIds.has(idKey) || seenSignatures.has(sigKey)) return false;
+              seenIds.add(idKey);
+              seenSignatures.add(sigKey);
+              return true;
+            }).map(p => {
+              // 如果 folderId 在迁移映射中，更新为新 id
+              if (p.folderId && folderIdMigrationMap.has(p.folderId)) {
+                return { ...p, folderId: folderIdMigrationMap.get(p.folderId) };
+              }
+              return p;
+            });
+            setPresets(deduped);
+          }
         } else if (res.status === 401) {
           setCurrentUser(null); setAuthToken(null);
         }
-      } catch (e) { console.warn("无法连接到后端服务，将使用初始状态。"); } 
+      } catch (e) { console.warn("无法连接到后端服务，将使用初始状态。"); appLogger.error('init', '无法连接后端', e.message); } 
       finally { if (isMounted) setDataLoaded(true); }
     };
     
@@ -442,7 +936,7 @@ export default function App() {
         if (res.status === 401) { setCurrentUser(null); setAuthToken(null); return; }
         if (!res.ok) throw new Error("Sync failed");
         setSyncStatus('synced');
-      } catch (e) { setSyncStatus('error'); }
+      } catch (e) { setSyncStatus('error'); appLogger.error('sync', '工作区同步失败', e.message); }
     }, 1000);
     return () => clearTimeout(timer);
   }, [workspaces, activeWorkspaceId, dataLoaded, authToken, authFetch]);
@@ -450,14 +944,28 @@ export default function App() {
   // 4. 自动同步快照到后端
   useEffect(() => {
     if (!dataLoaded || !authToken) return;
-    
+
     const timer = setTimeout(async () => {
       try {
-        await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(savedPrompts) });
-      } catch (e) { console.error("保存快照失败", e); }
+        const res = await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(savedPrompts) });
+        if (res.status === 401) { setCurrentUser(null); setAuthToken(null); return; }
+        if (!res.ok) throw new Error('Save snapshots failed');
+      } catch (e) { console.error("保存快照失败", e); appLogger.error('sync', '保存快照失败', e.message); }
     }, 800);
     return () => clearTimeout(timer);
   }, [savedPrompts, dataLoaded, authToken, authFetch]);
+
+  // 4.5 自动同步文件夹到后端
+  useEffect(() => {
+    if (!dataLoaded || !authToken) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        await authFetch(`${API_BASE}/folders`, { method: 'POST', body: JSON.stringify(folders) });
+      } catch (e) { console.error("保存文件夹失败", e); appLogger.error('sync', '保存文件夹失败', e.message); }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [folders, dataLoaded, authToken, authFetch]);
 
   // 5. 自动同步预设到后端
   useEffect(() => {
@@ -466,7 +974,7 @@ export default function App() {
     const timer = setTimeout(async () => {
       try {
         await authFetch(`${API_BASE}/presets`, { method: 'POST', body: JSON.stringify(presets) });
-      } catch (e) { console.error("保存预设失败", e); }
+      } catch (e) { console.error("保存预设失败", e); appLogger.error('sync', '保存预设失败', e.message); }
     }, 800);
     return () => clearTimeout(timer);
   }, [presets, dataLoaded, authToken, authFetch]);
@@ -642,6 +1150,47 @@ export default function App() {
     } catch (e) {}
   };
 
+  // ======== 预设库批量/文件夹操作（对标快照列表）========
+  const togglePresetBatchMode = () => { setIsPresetBatchMode(prev => { if (prev) setSelectedPresetIds([]); return !prev; }); };
+  const togglePresetSelected = (id) => { setSelectedPresetIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); };
+  const toggleSelectAllVisiblePresets = () => {
+    if (visiblePresetIds.length === 0) return;
+    setSelectedPresetIds(prev => allVisiblePresetsSelected ? prev.filter(id => !visiblePresetIds.includes(id)) : [...new Set([...prev, ...visiblePresetIds])]);
+  };
+
+  // 预设分配到文件夹
+  const assignPresetsToFolder = (presetIds, folderId) => {
+    const ids = Array.from(new Set((presetIds || []).filter(Boolean)));
+    if (ids.length === 0) return;
+    setPresets(prev => prev.map(p => ids.includes(p.id) ? { ...p, folderId } : p));
+    if (folderId) setCollapsedPresetFolderIds(prev => prev.filter(id => id !== folderId));
+    setSelectedPresetIds([]);
+  };
+
+  // 弹出文件夹选择器（复用快照的UI，但针对预设）
+  const promptAssignFolderForPresets = (presetIds) => {
+    if (!presetIds || presetIds.length === 0) return;
+    setFolderPickerSnapshotIds(presetIds);
+    setFolderPickerTarget('preset');
+    setFolderPickerCreating(false);
+    setFolderPickerNewName('');
+    setShowFolderPicker(true);
+  };
+
+  // 预设批量删除
+  const handleBatchDeletePresets = () => {
+    if (selectedPresetIds.length === 0) return;
+    if (!window.confirm(`确定删除选中的 ${selectedPresetIds.length} 个预设吗？`)) return;
+    setPresets(prev => prev.filter(p => !selectedPresetIdSet.has(p.id)));
+    setSelectedPresetIds([]);
+  };
+
+  // 预设文件夹折叠切换
+  const togglePresetFolderExpanded = (folderId) => {
+    if (!folderId) return;
+    setCollapsedPresetFolderIds(prev => prev.includes(folderId) ? prev.filter(id => id !== folderId) : [...prev, folderId]);
+  };
+
   // ---------------- 提示词标签拖拽交互逻辑 ----------------
   const handleTagDragStart = (e, inputId, tagId) => { e.stopPropagation(); setDraggedTagId({ inputId, tagId }); if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", tagId); } };
   const handleTagDragOver = (e, targetInputId, targetTagId = null) => {
@@ -661,8 +1210,9 @@ export default function App() {
       const newTags = [...input.tags];
       const [draggedTag] = newTags.splice(draggedTagIndex, 1);
       newTags.splice(targetTagIndex, 0, draggedTag);
+      const normalizedTags = normalizeTagDelimitersForOrder(newTags);
       const newInputs = [...prev];
-      newInputs[inputIndex] = invalidateCache({ ...input, tags: newTags, text: syncTextFromTags(newTags) });
+      newInputs[inputIndex] = invalidateCache({ ...input, tags: normalizedTags, text: syncTextFromTags(normalizedTags) });
       return newInputs;
     });
   };
@@ -690,10 +1240,12 @@ export default function App() {
         const targetTagIndex = newTargetTags.findIndex(t => t.id === targetTagId);
         newTargetTags.splice(targetTagIndex === -1 ? newTargetTags.length : targetTagIndex, 0, draggedTag);
       } else newTargetTags.push(draggedTag);
+      const normalizedSourceTags = normalizeTagDelimitersForOrder(newSourceTags);
+      const normalizedTargetTags = normalizeTagDelimitersForOrder(newTargetTags);
 
       const newInputs = [...prev];
-      newInputs[sourceIndex] = invalidateCache({ ...sourceInput, tags: newSourceTags, text: syncTextFromTags(newSourceTags) });
-      newInputs[targetIndex] = invalidateCache({ ...targetInput, tags: newTargetTags, text: syncTextFromTags(newTargetTags) });
+      newInputs[sourceIndex] = invalidateCache({ ...sourceInput, tags: normalizedSourceTags, text: syncTextFromTags(normalizedSourceTags) });
+      newInputs[targetIndex] = invalidateCache({ ...targetInput, tags: normalizedTargetTags, text: syncTextFromTags(normalizedTargetTags) });
       return newInputs;
     });
     setDraggedTagId(null);
@@ -799,25 +1351,7 @@ export default function App() {
     }
   };
 
-  const generateOutput = () => {
-    const actualSeparator = (separator || '\\n\\n').replace(/\\n/g, '\n');
-    return (inputs || []).filter(input => input.isActive !== false).map(input => {
-        const tempTags = input.isTextMode ? parseTextToTags(input.text || '') : (input.tags || []);
-        let joined = tempTags.filter(t => t.isActive !== false).map((t, idx, arr) => {
-           let s = removeGarbage(t.rawText !== undefined ? t.rawText : t.text).replace(/(^\s*)~~([\s\S]*?)~~(\s*$)/, '$1$2$3'); 
-           if (idx === 0) s = s.trimStart(); 
-           let d = t.delimiter !== undefined ? t.delimiter : (idx < arr.length - 1 ? ', ' : '');
-           if (idx === arr.length - 1) d = d.replace(/[,，。\r\n\s]+$/, '');
-           return s + d;
-        }).join('').trim();
-
-        if (joined.length > 0 && input.showTitle) {
-           const originalIndex = inputs.indexOf(input) + 1;
-           joined = `${input.title || `片段 ${originalIndex}`}\n${joined}`;
-        }
-        return joined;
-      }).filter(text => text.length > 0).join(actualSeparator);
-  };
+  const generateOutput = () => buildOutputTextFromInputs(inputs, separator);
   const outputText = generateOutput();
 
   const addInput = () => setInputs(prev => [...prev, { id: generateId(), text: '', title: `片段 ${prev.length + 1}`, isActive: true, tags: [], isTextMode: false, color: 'bg-white', isCollapsed: false, showTitle: false, lang: 'zh' }]);
@@ -873,19 +1407,21 @@ export default function App() {
     else executeSave(finalTitle);
   };
 
-  const executeSave = async (finalTitle, overwriteId = null) => {
+  const executeSave = (finalTitle, overwriteId = null) => {
     const snapshotId = overwriteId || generateId();
-    const newSnapshot = { id: snapshotId, title: finalTitle, inputs: cleanDataForStorage(inputs), separator: separator || '\\n\\n', timestamp: Date.now() };
+    const newSnapshot = normalizeSnapshotRecord({
+      id: snapshotId,
+      title: finalTitle,
+      inputs: cleanDataForStorage(inputs),
+      separator: separator || '\\n\\n',
+      timestamp: Date.now(),
+      folderId: null
+    });
     setIsConflictModalOpen(false); setIsSaveModalOpen(false); setIsDrawerOpen(true);
     
     setWorkspaces(prev => prev.map(w => w.id === activeWorkspaceId ? { ...w, isDirty: false, name: finalTitle } : w));
     if (pendingCloseTabId) { executeCloseTab(pendingCloseTabId); setPendingCloseTabId(null); }
-
-    try {
-      const newList = [newSnapshot, ...savedPrompts.filter(p => p.id !== overwriteId)];
-      setSavedPrompts(newList);
-      await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(newList) });
-    } catch (e) { console.error("保存快照失败", e); }
+    setSavedPrompts(prev => [newSnapshot, ...prev.filter(p => p.id !== overwriteId)]);
   };
 
   const handleOverwrite = () => executeSave(conflictTarget.title, conflictTarget.id);
@@ -901,22 +1437,13 @@ export default function App() {
   };
   const handleCancelConflict = () => { setIsConflictModalOpen(false); setTimeout(() => { saveInputRef.current?.focus(); }, 50); };
 
-  const deleteSnapshot = async (id) => {
-    try { 
-      const newList = savedPrompts.filter(p => p.id !== id);
-      setSavedPrompts(newList);
-      await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(newList) });
-    } catch (e) {}
+  const deleteSnapshot = (id) => {
+    setSavedPrompts(prev => prev.filter(p => p.id !== id));
   };
 
-  const updateSavedTitle = async (id, newTitle) => {
-    if (!newTitle.trim()) return setEditingSavedTitleId(null);
-    try {
-      const newList = savedPrompts.map(p => p.id === id ? { ...p, title: newTitle } : p);
-      setSavedPrompts(newList);
-      await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(newList) });
-      setEditingSavedTitleId(null);
-    } catch (e) { console.error("重命名失败", e); }
+  const updateSavedTitle = (id, newTitle) => {
+    if (!newTitle.trim()) return;
+    setSavedPrompts(prev => prev.map(p => p.id === id ? { ...p, title: newTitle } : p));
   };
 
   const confirmExport = () => {
@@ -925,7 +1452,19 @@ export default function App() {
     let hasData = false;
     
     if (exportOptions.workspaces && workspaces.length > 0) { exportData.workspaces = workspaces; hasData = true; }
-    if (exportOptions.snapshots && savedPrompts.length > 0) { exportData.snapshots = savedPrompts; hasData = true; }
+    if (exportOptions.snapshots && savedPrompts.length > 0) {
+      if (folders.length > 0) exportData.folders = folders;
+      exportData.snapshots = savedPrompts.map(snapshot => {
+        const folder = snapshot.folderId ? folders.find(f => f.id === snapshot.folderId) : null;
+        return {
+          ...snapshot,
+          folderName: folder ? folder.name : '',
+          folderColor: folder ? (folder.color || DEFAULT_FOLDER_COLOR) : null,
+          folderIcon: folder ? (folder.icon || DEFAULT_FOLDER_ICON) : null,
+        };
+      });
+      hasData = true;
+    }
     if (exportOptions.presets && presets.length > 0) { exportData.presets = presets; hasData = true; }
     if (exportOptions.settings) { exportData.settings = { transConfig }; hasData = true; }
     
@@ -938,6 +1477,152 @@ export default function App() {
     setIsExportModalOpen(false);
   };
 
+  const executeImport = (importedData, snapshotImportMode = 'merge') => {
+    let importedSnapshotCount = 0;
+    let importedPresetCount = 0;
+    let presetSkippedCount = 0;
+    let importedSettings = false;
+    let importedWorkspacesCount = 0;
+
+    if (Array.isArray(importedData)) {
+      const importedSnapshots = normalizeSavedPromptsList(importedData);
+      // 旧格式：从快照中提取文件夹
+      const folderMap = new Map();
+      importedData.forEach(snapshot => {
+        if (snapshot.folderId && snapshot.folderName) {
+          if (!folderMap.has(snapshot.folderId)) {
+            folderMap.set(snapshot.folderId, {
+              id: snapshot.folderId,
+              name: snapshot.folderName,
+              color: snapshot.folderColor || DEFAULT_FOLDER_COLOR,
+              icon: snapshot.folderIcon || DEFAULT_FOLDER_ICON,
+            });
+          }
+        }
+      });
+      if (folderMap.size > 0) {
+        // 导入时去重：与已有文件夹重名+同scope的跳过
+        setFolders(prev => {
+          const existingNameScopes = new Set(prev.map(f => `${f.name.trim().toLowerCase()}|||${f.scope || 'snapshot'}`));
+          const newFolders = Array.from(folderMap.values()).filter(f => !existingNameScopes.has(`${f.name.trim().toLowerCase()}|||${f.scope || 'snapshot'}`));
+          return newFolders.length > 0 ? [...newFolders, ...prev] : prev;
+        });
+      }
+      if (snapshotImportMode === 'replace') setSavedPrompts(importedSnapshots);
+      importedSnapshotCount = importedSnapshots.length;
+    } else if (importedData.type === 'prompt_builder_export_v2') {
+      if (importedData.workspaces && Array.isArray(importedData.workspaces)) {
+        const newWsList = importedData.workspaces.map(w => ({
+          ...w,
+          id: generateId(),
+          inputs: sanitizeInputs(Array.isArray(w.inputs) ? w.inputs : []),
+          isDirty: false
+        }));
+        setWorkspaces(prev => [...prev, ...newWsList]);
+        setActiveWorkspaceId(newWsList[0].id);
+        importedWorkspacesCount = newWsList.length;
+      }
+
+      if (importedData.snapshots) {
+        const importedSnapshots = normalizeSavedPromptsList(importedData.snapshots);
+        if (snapshotImportMode === 'replace') setSavedPrompts(importedSnapshots);
+        else setSavedPrompts(prev => [...importedSnapshots, ...prev]);
+        importedSnapshotCount += importedSnapshots.length;
+
+        // 导入文件夹（快照 scope）
+        if (importedData.folders && Array.isArray(importedData.folders)) {
+          // 新格式：有 folders 数组，去重后合并，scope 默认为 snapshot
+          setFolders(prev => {
+            const existingNameScopes = new Set(prev.map(f => `${f.name.trim().toLowerCase()}|||${f.scope || 'snapshot'}`));
+            const newFolders = importedData.folders
+              .map(f => ({ ...f, scope: f.scope || 'snapshot' }))
+              .filter(f => !existingNameScopes.has(`${f.name.trim().toLowerCase()}|||${f.scope}`));
+            return newFolders.length > 0 ? [...newFolders, ...prev] : prev;
+          });
+        } else {
+          // 旧格式：从快照中提取文件夹
+          const folderMap = new Map();
+          importedData.snapshots.forEach(snapshot => {
+            if (snapshot.folderId && snapshot.folderName) {
+              if (!folderMap.has(snapshot.folderId)) {
+                folderMap.set(snapshot.folderId, {
+                  id: snapshot.folderId,
+                  name: snapshot.folderName,
+                  color: snapshot.folderColor || DEFAULT_FOLDER_COLOR,
+                  icon: snapshot.folderIcon || DEFAULT_FOLDER_ICON,
+                  scope: 'snapshot',
+                });
+              }
+            }
+          });
+          if (folderMap.size > 0) {
+            setFolders(prev => {
+              const existingNameScopes = new Set(prev.map(f => `${f.name.trim().toLowerCase()}|||${f.scope || 'snapshot'}`));
+              const newFolders = Array.from(folderMap.values()).filter(f => !existingNameScopes.has(`${f.name.trim().toLowerCase()}|||snapshot`));
+              return newFolders.length > 0 ? [...newFolders, ...prev] : prev;
+            });
+          }
+        }
+      }
+
+      if (importedData.presets && importedData.presets.length > 0) {
+        setPresets(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          // 同时用 (title + text) 做内容级去重
+          const existingSignatures = new Set(prev.map(p => `${p.title || ''}|||${p.text || ''}`));
+          let skipped = 0;
+          const deduped = importedData.presets.filter(ip => {
+            if (existingIds.has(ip.id)) { skipped++; return false; }
+            const sig = `${ip.title || ''}|||${ip.text || ''}`;
+            if (existingSignatures.has(sig)) { skipped++; return false; }
+            existingIds.add(ip.id);
+            existingSignatures.add(sig);
+            return true;
+          });
+          if (deduped.length > 0) {
+            importedPresetCount += deduped.length;
+            return [...deduped, ...prev];
+          } else {
+            // 全部重复，不计入成功计数，但也不单独报错（避免和成功提示重叠）
+            importedPresetCount += 0;
+            presetSkippedCount = skipped;
+            return prev;
+          }
+        });
+        // 只有实际导入了才计入成功消息（在上方条件内已处理）
+      }
+
+      if (importedData.settings && importedData.settings.transConfig) {
+        setTransConfig(migrateTransConfig(importedData.settings.transConfig));
+        importedSettings = true;
+      }
+    }
+
+    const messageParts = [];
+    const actionText = snapshotImportMode === 'replace' && importedSnapshotCount > 0 ? '已清空当前快照并导入 ' : '已导入 ';
+
+    if (importedWorkspacesCount > 0) messageParts.push(`${importedWorkspacesCount} 个工作区`);
+    if (importedSnapshotCount > 0) messageParts.push(`${actionText}${importedSnapshotCount} 条快照`.trim());
+    if (importedPresetCount > 0) messageParts.push(`${importedPresetCount} 条预设`);
+    if (presetSkippedCount > 0) messageParts.push(`跳过 ${presetSkippedCount} 条重复预设`);
+    if (importedSettings) messageParts.push('应用设置');
+
+    const finalMsg = messageParts.length > 0 ? messageParts.join('，') : '导入完成（无新增数据）';
+    setSuccessMessage(finalMsg);
+  };
+
+  const closeImportModeModal = () => {
+    setPendingImportPayload(null);
+  };
+
+  const handleImportWithMode = (snapshotImportMode) => {
+    if (!pendingImportPayload?.data) return closeImportModeModal();
+
+    const importedData = pendingImportPayload.data;
+    setPendingImportPayload(null);
+    executeImport(importedData, snapshotImportMode);
+  };
+
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -945,21 +1630,18 @@ export default function App() {
     reader.onload = async (event) => {
       try {
         const importedData = JSON.parse(event.target.result);
-        let importCount = 0; let importedSettings = false; let importedWorkspacesCount = 0;
+        const importedSnapshots = extractImportedSnapshots(importedData);
 
-        if (Array.isArray(importedData)) { setSavedPrompts([...importedData, ...savedPrompts]); importCount = importedData.length; } 
-        else if (importedData.type === 'prompt_builder_export_v2') {
-          if (importedData.workspaces && Array.isArray(importedData.workspaces)) {
-            const newWsList = importedData.workspaces.map(w => ({ ...w, id: generateId(), isDirty: false }));
-            setWorkspaces(prev => [...prev, ...newWsList]);
-            setActiveWorkspaceId(newWsList[0].id);
-            importedWorkspacesCount = newWsList.length;
-          }
-          if (importedData.snapshots) { setSavedPrompts([...importedData.snapshots, ...savedPrompts]); importCount += importedData.snapshots.length; }
-          if (importedData.presets) { setPresets([...importedData.presets, ...presets]); importCount += importedData.presets.length; }
-          if (importedData.settings && importedData.settings.transConfig) { setTransConfig(migrateTransConfig(importedData.settings.transConfig)); importedSettings = true; }
+        if (importedSnapshots.length > 0 && savedPrompts.length > 0) {
+          setPendingImportPayload({
+            data: importedData,
+            importedSnapshotCount: importedSnapshots.length,
+            currentSnapshotCount: savedPrompts.length
+          });
+          return;
         }
-        setSuccessMessage(`✅ 成功导入 ${importedWorkspacesCount > 0 ? importedWorkspacesCount + '个工作区, ' : ''}${importCount}条片段${importedSettings ? '及应用配置' : ''}！`);
+
+        executeImport(importedData, 'merge');
       } catch (err) { setErrorMessage('导入失败: ' + err.message); }
     };
     reader.readAsText(file); e.target.value = null; 
@@ -971,6 +1653,647 @@ export default function App() {
     document.body.appendChild(textArea); textArea.focus(); textArea.select();
     try { document.execCommand('copy'); if (id) { setCopiedDrawerId(id); setTimeout(() => setCopiedDrawerId(null), 2000); } else { setCopied(true); setTimeout(() => setCopied(false), 2000); } } catch (err) {}
     textArea.remove();
+  };
+
+  const toggleSnapshotBatchMode = () => {
+    setIsSnapshotBatchMode(prev => {
+      if (prev) setSelectedSnapshotIds([]);
+      return !prev;
+    });
+  };
+
+  const toggleSnapshotSelected = (snapshotId) => {
+    setSelectedSnapshotIds(prev => {
+      if (prev.includes(snapshotId)) return prev.filter(id => id !== snapshotId);
+      return [...prev, snapshotId];
+    });
+  };
+
+  const toggleSelectAllVisibleSnapshots = () => {
+    if (visibleSnapshotIds.length === 0) return;
+
+    setSelectedSnapshotIds(prev => {
+      if (allVisibleSnapshotsSelected) {
+        return prev.filter(id => !visibleSnapshotIds.includes(id));
+      }
+
+      const merged = new Set(prev);
+      visibleSnapshotIds.forEach(id => merged.add(id));
+      return Array.from(merged);
+    });
+  };
+
+  const assignSnapshotsToFolder = (snapshotIds, folderId) => {
+    const ids = Array.from(new Set((snapshotIds || []).filter(Boolean)));
+    if (ids.length === 0) return;
+
+    setSavedPrompts(prev => {
+      return prev.map(snapshot => (
+        ids.includes(snapshot.id)
+          ? { ...snapshot, folderId: folderId || null }
+          : snapshot
+      ));
+    });
+
+    if (folderId) {
+      setCollapsedFolderIds(prev => prev.filter(id => id !== folderId));
+    }
+    setSelectedSnapshotIds([]);
+  };
+
+  const promptAssignFolderForSnapshots = (snapshotIds) => {
+    if (!snapshotIds || snapshotIds.length === 0) return;
+    setFolderPickerSnapshotIds(snapshotIds);
+    setFolderPickerTarget('snapshot');
+    setFolderPickerCreating(false);
+    setFolderPickerNewName('');
+    setShowFolderPicker(true);
+  };
+
+  const closeFolderPicker = () => {
+    setShowFolderPicker(false);
+    setFolderPickerSnapshotIds([]);
+    setFolderPickerTarget('snapshot');
+    setFolderPickerCreating(false);
+    setFolderPickerNewName('');
+    setFolderPickerDefaultName('');
+  };
+
+  const handlePickerSelectFolder = (folderId) => {
+    if (folderPickerTarget === 'preset') assignPresetsToFolder(folderPickerSnapshotIds, folderId);
+    else assignSnapshotsToFolder(folderPickerSnapshotIds, folderId);
+    closeFolderPicker();
+  };
+
+  const handlePickerRemoveFromFolder = () => {
+    if (folderPickerTarget === 'preset') assignPresetsToFolder(folderPickerSnapshotIds, null);
+    else assignSnapshotsToFolder(folderPickerSnapshotIds, null);
+    closeFolderPicker();
+  };
+
+  const handlePickerStartCreating = () => {
+    // 根据目标类型计算默认文件夹名，序号自动递增
+    const prefix = folderPickerTarget === 'preset' ? '新预设集' : '新快照集';
+    const existingNames = new Set(folders.filter(f => f.scope === folderPickerTarget).map(f => f.name.trim().toLowerCase()));
+    let defaultName = prefix;
+    let seq = 2;
+    while (existingNames.has(defaultName.toLowerCase())) {
+      defaultName = `${prefix}${seq}`;
+      seq++;
+    }
+    setFolderPickerDefaultName(defaultName);
+    setFolderPickerCreating(true);
+    setFolderPickerNewName('');
+  };
+
+  const handlePickerCancelCreating = () => {
+    setFolderPickerCreating(false);
+    setFolderPickerNewName('');
+    setFolderPickerDefaultName('');
+  };
+
+  const handlePickerConfirmCreating = () => {
+    // 用户没输入则用默认名
+    const finalName = folderPickerNewName.trim() || folderPickerDefaultName;
+    if (!finalName) return;
+
+    // 检查重名（同 scope 内大小写不敏感）
+    const existingFolder = folders.find(f =>
+      f.name.trim().toLowerCase() === finalName.toLowerCase() && f.scope === folderPickerTarget
+    );
+    if (existingFolder) {
+      setErrorMessage(`文件夹"${existingFolder.name}"已存在，请换一个名称`);
+      return;
+    }
+
+    const newFolderId = generateId();
+    setFolders(prev => [...prev, {
+      id: newFolderId,
+      name: finalName,
+      color: DEFAULT_FOLDER_COLOR,
+      icon: DEFAULT_FOLDER_ICON,
+      scope: folderPickerTarget,
+    }]);
+    // 根据目标类型分配到新文件夹
+    if (folderPickerTarget === 'preset') assignPresetsToFolder(folderPickerSnapshotIds, newFolderId);
+    else assignSnapshotsToFolder(folderPickerSnapshotIds, newFolderId);
+    closeFolderPicker();
+  };
+
+  const handleBatchDeleteSnapshots = () => {
+    if (selectedSnapshotIds.length === 0) return;
+    if (!window.confirm(`确定删除选中的 ${selectedSnapshotIds.length} 个快照吗？`)) return;
+
+    setSavedPrompts(prev => prev.filter(snapshot => !selectedSnapshotIdSet.has(snapshot.id)));
+    setSelectedSnapshotIds([]);
+  };
+
+  const toggleFolderExpanded = (folderId) => {
+    if (!folderId) return;
+
+    setCollapsedFolderIds(prev => (
+      prev.includes(folderId)
+        ? prev.filter(id => id !== folderId)
+        : [...prev, folderId]
+    ));
+  };
+
+  const startEditingFolder = (folderId, folderName) => {
+    setEditingFolderId(folderId);
+    setEditingFolderName(folderName || '');
+  };
+
+  const finishEditingFolder = () => {
+    setEditingFolderId(null);
+    setEditingFolderName('');
+  };
+
+  const commitFolderRename = (folderId) => {
+    const trimmedName = editingFolderName.trim();
+    if (!folderId) return finishEditingFolder();
+    if (!trimmedName) {
+      setErrorMessage('文件夹名称不能为空');
+      return;
+    }
+
+    // 检查重名（排除自身，同 scope 内大小写不敏感）
+    const currentFolder = folders.find(f => f.id === folderId);
+    const currentScope = currentFolder?.scope || 'snapshot';
+    const conflictingFolder = folders.find(f =>
+      f.id !== folderId &&
+      f.scope === currentScope &&
+      f.name.trim().toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (conflictingFolder) {
+      setErrorMessage('已存在同名文件夹');
+      return;
+    }
+
+    setFolders(prev => prev.map(f =>
+      f.id === folderId ? { ...f, name: trimmedName } : f
+    ));
+    finishEditingFolder();
+  };
+
+  const updateFolderAppearance = (folderId, patch) => {
+    // 将 UI 属性名映射为实体属性名：folderIcon→icon, folderColor→color
+    const mappedPatch = {};
+    if ('folderIcon' in patch) mappedPatch.icon = patch.folderIcon;
+    if ('folderColor' in patch) mappedPatch.color = patch.folderColor;
+    if ('icon' in patch) mappedPatch.icon = patch.icon;
+    if ('color' in patch) mappedPatch.color = patch.color;
+    setFolders(prev => prev.map(f =>
+      f.id === folderId ? { ...f, ...mappedPatch } : f
+    ));
+  };
+
+  const openFolderDeleteDialog = (folderId, folderName, scope = 'snapshot') => {
+    if (!folderId) return;
+    setFolderDeleteTarget({ folderId, folderName, scope });
+  };
+
+  const handleDeleteFolderWithContents = () => {
+    if (!folderDeleteTarget) return;
+    const { folderId, scope } = folderDeleteTarget;
+
+    if (scope === 'preset') {
+      // 删除该文件夹内的所有预设
+      setPresets(prev => prev.filter(p => p.folderId !== folderId));
+      setSelectedPresetIds([]);
+      setCollapsedPresetFolderIds(prev => prev.filter(id => id !== folderId));
+    } else {
+      // 删除该文件夹内的所有快照
+      setSavedPrompts(prev => prev.filter(snapshot => snapshot.folderId !== folderId));
+      setSelectedSnapshotIds([]);
+      setCollapsedFolderIds(prev => prev.filter(id => id !== folderId));
+    }
+    // 删除文件夹实体
+    setFolders(prev => prev.filter(f => f.id !== folderId));
+    setFolderDeleteTarget(null);
+  };
+
+  const handleDissolveFolder = () => {
+    if (!folderDeleteTarget) return;
+    const { folderId, scope } = folderDeleteTarget;
+
+    if (scope === 'preset') {
+      // 预设移出文件夹
+      setPresets(prev => prev.map(p => (
+        p.folderId === folderId ? { ...p, folderId: null } : p
+      )));
+      setSelectedPresetIds([]);
+      setCollapsedPresetFolderIds(prev => prev.filter(id => id !== folderId));
+    } else {
+      // 快照移出文件夹
+      setSavedPrompts(prev => prev.map(snapshot => (
+        snapshot.folderId === folderId ? { ...snapshot, folderId: null } : snapshot
+      )));
+      setSelectedSnapshotIds([]);
+      setCollapsedFolderIds(prev => prev.filter(id => id !== folderId));
+    }
+    // 删除文件夹实体
+    setFolders(prev => prev.filter(f => f.id !== folderId));
+    setFolderDeleteTarget(null);
+  };
+
+  const clearSnapshotPreviewCloseTimer = () => {
+    if (snapshotPreviewCloseTimeoutRef.current) {
+      clearTimeout(snapshotPreviewCloseTimeoutRef.current);
+      snapshotPreviewCloseTimeoutRef.current = null;
+    }
+  };
+
+  const closeSnapshotPreview = () => {
+    clearSnapshotPreviewCloseTimer();
+    setHoveredSnapshotId(null);
+    setSnapshotPreviewPosition(null);
+  };
+
+  const scheduleCloseSnapshotPreview = () => {
+    clearSnapshotPreviewCloseTimer();
+    snapshotPreviewCloseTimeoutRef.current = setTimeout(() => {
+      setHoveredSnapshotId(null);
+      setSnapshotPreviewPosition(null);
+      snapshotPreviewCloseTimeoutRef.current = null;
+    }, 90);
+  };
+
+  const openSnapshotPreview = (snapshotId, element) => {
+    const previewText = snapshotPreviewMap[snapshotId] || '';
+    if (!previewText || !element) return;
+
+    clearSnapshotPreviewCloseTimer();
+
+    const rect = element.getBoundingClientRect();
+    const width = Math.min(360, Math.max(260, rect.left - 24));
+    const maxHeight = Math.min(420, Math.max(180, window.innerHeight - 32));
+    const top = Math.max(16, Math.min(rect.top, window.innerHeight - maxHeight - 16));
+    const left = Math.max(16, rect.left - width - 12);
+
+    setHoveredSnapshotId(snapshotId);
+    setSnapshotPreviewPosition({ top, left, width, maxHeight });
+  };
+
+  const renderSnapshotCard = (snapshot, options = {}) => {
+    const {
+      isNested = false,
+      accentColor = null,
+      hideFolderLabel = false
+    } = options;
+    const previewText = snapshotPreviewMap[snapshot.id] || '';
+    const isSelected = selectedSnapshotIdSet.has(snapshot.id);
+
+    return (
+      <div key={snapshot.id} className={isNested ? 'ml-4 pl-4 relative' : ''}>
+        {isNested && (
+          <span
+            className="absolute left-0 top-5 h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: accentColor || getFolderColorOption(DEFAULT_FOLDER_COLOR).accent }}
+          />
+        )}
+
+        <div
+          onMouseEnter={(e) => openSnapshotPreview(snapshot.id, e.currentTarget)}
+          onMouseLeave={scheduleCloseSnapshotPreview}
+          className={`border rounded-xl p-4 transition-all group relative shadow-sm ${
+            isDarkMode
+              ? 'bg-zinc-900/80 border-blue-900/30 hover:border-blue-700'
+              : 'bg-white border-gray-100 hover:border-blue-200'
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            {isSnapshotBatchMode && (
+              <button
+                type="button"
+                onClick={() => toggleSnapshotSelected(snapshot.id)}
+                className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border transition-colors ${
+                  isSelected
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : (isDarkMode ? 'border-zinc-700 bg-zinc-950 text-zinc-500' : 'border-gray-300 bg-white text-gray-300')
+                }`}
+                title={isSelected ? '取消选择' : '选择快照'}
+              >
+                {isSelected && <Check size={12} strokeWidth={4} />}
+              </button>
+            )}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0 flex-1">
+                  {editingSavedTitleId === snapshot.id ? (
+                    <input
+                      autoFocus
+                      value={snapshot.title}
+                      onChange={e => updateSavedTitle(snapshot.id, e.target.value)}
+                      onBlur={() => setEditingSavedTitleId(null)}
+                      onKeyDown={e => { if (e.key === 'Enter') setEditingSavedTitleId(null); }}
+                      className={`text-sm font-bold border rounded px-1.5 py-0.5 outline-none w-full ${
+                        isDarkMode ? 'bg-zinc-950 border-blue-700 text-zinc-200' : 'bg-blue-50 border-blue-300 text-gray-800'
+                      }`}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onDoubleClick={() => setEditingSavedTitleId(snapshot.id)}
+                      className={`text-left text-sm font-bold truncate rounded px-1 transition-colors w-full ${
+                        isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-gray-800 hover:bg-blue-50'
+                      }`}
+                      title="双击重命名"
+                    >
+                      {snapshot.title}
+                    </button>
+                  )}
+
+                  <div className={`text-[10px] mt-1 flex items-center gap-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    <Clock size={10} /> {new Date(snapshot.timestamp).toLocaleString()}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => deleteSnapshot(snapshot.id)}
+                  className={`transition-colors opacity-0 group-hover:opacity-100 ${
+                    isDarkMode ? 'text-zinc-600 hover:text-red-400' : 'text-gray-300 hover:text-red-500'
+                  }`}
+                  title="删除快照"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+
+              {snapshot.folderId && !hideFolderLabel && (() => {
+                const folder = folders.find(f => f.id === snapshot.folderId);
+                return folder ? (
+                  <div className="mb-3">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                      isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-blue-50 text-blue-700'
+                    }`}>
+                      <Folder size={12} />
+                      {folder.name}
+                    </span>
+                  </div>
+                ) : null;
+              })()}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    updateActiveWorkspace({ inputs: snapshot.inputs, separator: snapshot.separator || '\n\n', name: snapshot.title, isDirty: false });
+                    setIsDrawerOpen(false);
+                  }}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1 active:scale-95 ${
+                    isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                  }`}
+                >
+                  <FileUp size={14} /> 加载
+                </button>
+                <button
+                  onClick={() => executeCopy(previewText, snapshot.id)}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 active:scale-95 ${
+                    copiedDrawerId === snapshot.id
+                      ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-green-100 text-green-700')
+                      : (isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                  }`}
+                >
+                  {copiedDrawerId === snapshot.id ? <Check size={14} /> : <Copy size={14} />}
+                  {copiedDrawerId === snapshot.id ? '已复制' : '复制'}
+                </button>
+                <button
+                  onClick={() => promptAssignFolderForSnapshots([snapshot.id])}
+                  className={`px-2.5 py-2 rounded-lg transition-colors ${
+                    isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-blue-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600'
+                  }`}
+                  title="加入或移出文件夹"
+                >
+                  <FolderPlus size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ======== 预设卡片渲染函数（对标快照的 renderSnapshotCard）========
+  const renderPresetCard = (preset, options = {}) => {
+    const { isNested = false, accentColor = null, hideFolderLabel = false } = options;
+    const isSelected = selectedPresetIdSet.has(preset.id);
+    return (
+      <div key={preset.id} className={isNested ? 'ml-4 pl-4 relative' : ''}>
+        {isNested && (
+          <span
+            className="absolute left-0 top-5 h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: accentColor || getFolderColorOption(DEFAULT_FOLDER_COLOR).accent }}
+          />
+        )}
+        <div className={`border rounded-xl p-4 transition-all group relative shadow-sm ${
+          isDarkMode
+            ? 'bg-zinc-900/80 border-purple-900/30 hover:border-purple-700'
+            : 'bg-white border-purple-100 hover:border-purple-300'
+        }`}>
+          <div className="flex items-start gap-2">
+            {/* 批量选择复选框 */}
+            {isPresetBatchMode && (
+              <button
+                type="button"
+                onClick={() => togglePresetSelected(preset.id)}
+                className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border transition-colors ${
+                  isSelected
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : (isDarkMode ? 'border-zinc-700 bg-zinc-950 text-zinc-500' : 'border-gray-300 bg-white text-gray-300')
+                }`}
+                title={isSelected ? '取消选择' : '选择预设'}
+              >
+                {isSelected && <Check size={12} strokeWidth={4} />}
+              </button>
+            )}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0 flex-1">
+                  {editingPresetTitleId === preset.id ? (
+                    <input
+                      autoFocus
+                      value={preset.title}
+                      onChange={e => setPresets(presets.map(px => px.id === preset.id ? {...px, title: e.target.value} : px))}
+                      onBlur={() => updatePresetTitle(preset.id, preset.title)}
+                      onKeyDown={e => e.key === 'Enter' && updatePresetTitle(preset.id, preset.title)}
+                      className={`text-sm font-bold border rounded px-1.5 py-0.5 outline-none w-full ${
+                        isDarkMode ? 'bg-zinc-950 border-purple-700 text-zinc-200' : 'bg-purple-50 border-purple-300 text-gray-800'
+                      }`}
+                    />
+                  ) : (
+                    <span
+                      onDoubleClick={() => setEditingPresetTitleId(preset.id)}
+                      className={`text-sm font-bold truncate pr-6 cursor-text rounded px-1 transition-colors ${
+                        isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-gray-800 hover:bg-purple-50'
+                      }`}
+                      title="双击重命名"
+                    >{preset.title}</span>
+                  )}
+                  {/* 文件夹标签 */}
+                  {preset.folderId && !hideFolderLabel && (() => {
+                    const folder = folders.find(f => f.id === preset.folderId);
+                    return folder ? (
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                          isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-purple-50 text-purple-700'
+                        }`}>
+                          <Folder size={12} />
+                          {folder.name}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+                <button onClick={() => deletePreset(preset.id)} className={`transition-colors opacity-0 group-hover:opacity-100 ${
+                  isDarkMode ? 'text-zinc-600 hover:text-red-400' : 'text-gray-300 hover:text-red-500'
+                }`} title="删除预设"><Trash2 size={16}/></button>
+              </div>
+
+              {/* 预设内容预览 */}
+              <div className={`text-xs line-clamp-2 mb-3 p-2 rounded-lg border ${
+                isDarkMode ? 'text-zinc-500 bg-zinc-950/50 border-zinc-800/50' : 'text-gray-500 bg-gray-50 border-gray-100'
+              }`}>
+                {preset.isTextMode ? preset.text : (preset.tags && preset.tags.length > 0 ? preset.tags.map(t => t.text).join(', ') : '空预设')}
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => insertPreset(preset)}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1 active:scale-95 ${
+                    isDarkMode ? 'bg-purple-900/20 text-purple-400 hover:bg-purple-900/40' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  }`}
+                >
+                  <Plus size={14}/> 追加到工作区
+                </button>
+                {!isPresetBatchMode && (
+                  <button
+                    onClick={() => promptAssignFolderForPresets([preset.id])}
+                    className={`px-2.5 py-2 rounded-lg transition-colors ${
+                      isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-purple-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-purple-600'
+                    }`}
+                    title="加入或移出文件夹"
+                  ><FolderPlus size={14}/></button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFolderSection = (group) => {
+    const colorOption = getFolderColorOption(group.folderColor);
+    const folderIconOption = getFolderIconOption(group.folderIcon);
+    const FolderGlyph = folderIconOption.icon;
+    const countLabel = isSnapshotSearchActive ? `${group.matchedCount} / ${group.totalCount}` : `${group.totalCount}`;
+    const sectionHeaderClasses = group.isExpanded
+      ? (isDarkMode ? colorOption.darkRow : colorOption.lightRow)
+      : (isDarkMode ? 'border-zinc-800 bg-zinc-900/70' : 'border-gray-200 bg-white');
+    const iconChipClasses = isDarkMode ? colorOption.darkIcon : colorOption.lightIcon;
+    const badgeClasses = isDarkMode ? colorOption.darkBadge : colorOption.lightBadge;
+
+    return (
+      <section key={group.folderId} className="space-y-3">
+        <div className="space-y-2">
+          <div
+            onClick={() => toggleFolderExpanded(group.folderId)}
+            className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-colors cursor-pointer ${sectionHeaderClasses}`}
+          >
+            <div className="min-w-0 flex flex-1 items-center gap-2">
+              <div className={`flex items-center gap-2 min-w-0 flex-1 ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
+                <ChevronDown size={15} className={`shrink-0 transition-transform ${group.isExpanded ? 'rotate-0' : '-rotate-90'}`} />
+                <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${iconChipClasses}`}>
+                  <FolderGlyph size={14} />
+                </span>
+              </div>
+
+              <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+                {editingFolderId === group.folderId ? (
+                  <input
+                    autoFocus
+                    value={editingFolderName}
+                    onChange={(e) => setEditingFolderName(e.target.value)}
+                    onBlur={() => commitFolderRename(group.folderId)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') commitFolderRename(group.folderId);
+                      if (e.key === 'Escape') finishEditingFolder();
+                    }}
+                    className={`w-full rounded px-1.5 py-0.5 text-sm font-semibold outline-none border ${
+                      isDarkMode ? 'bg-zinc-950 border-zinc-700 text-zinc-100' : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onDoubleClick={() => startEditingFolder(group.folderId, group.folderName)}
+                    className={`max-w-full truncate rounded px-1.5 py-0.5 text-left text-sm font-semibold transition-colors ${
+                      isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-gray-800 hover:bg-gray-100'
+                    }`}
+                    title="双击重命名文件夹"
+                  >
+                    {group.folderName}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="ml-3 flex shrink-0 items-center gap-2">
+              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${badgeClasses}`}>
+                {countLabel}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (activeFolderStylePickerId === group.folderId) {
+                    setActiveFolderStylePickerId(null);
+                    setFolderStylePickerPos(null);
+                  } else {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setFolderStylePickerPos({ top: rect.top, right: rect.right });
+                    setActiveFolderStylePickerId(group.folderId);
+                  }
+                }}
+                className={`rounded-lg p-1.5 transition-colors ${
+                  isDarkMode ? 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                }`}
+                title="设置文件夹图标和颜色"
+              >
+                <Palette size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFolderDeleteDialog(group.folderId, group.folderName, 'snapshot');
+                }}
+                className={`rounded-lg p-1.5 transition-colors ${
+                  isDarkMode ? 'text-zinc-400 hover:bg-red-950/30 hover:text-red-300' : 'text-gray-500 hover:bg-red-50 hover:text-red-500'
+                }`}
+                title="删除文件夹"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {group.isExpanded && (
+          <div className="space-y-3">
+            {group.items.map(snapshot => renderSnapshotCard(snapshot, {
+              isNested: true,
+              accentColor: colorOption.accent,
+              hideFolderLabel: true
+            }))}
+          </div>
+        )}
+      </section>
+    );
   };
 
   const handleDragStart = (e, id) => { setDraggedId(id); if (e.dataTransfer) e.dataTransfer.effectAllowed = "move"; };
@@ -989,6 +2312,7 @@ export default function App() {
   // ================= 未登录：显示登录/注册页面 =================
   if (!currentUser) {
     return (
+      <ErrorBoundary>
       <div className={`flex items-center justify-center min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-zinc-950 text-zinc-200' : 'bg-gray-50 text-gray-800'}`}>
         <button onClick={() => setIsDarkMode(!isDarkMode)} className={`fixed top-4 right-4 p-2.5 rounded-xl border transition-colors ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-yellow-400' : 'bg-white border-gray-200 text-gray-500 hover:text-blue-500'}`}>
           {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -1027,11 +2351,13 @@ export default function App() {
           </form>
         </div>
       </div>
+      </ErrorBoundary>
     );
   }
 
   // ================= 已登录：显示主界面 =================
   return (
+    <ErrorBoundary>
     <div 
       className={`flex flex-col md:flex-row h-screen font-sans overflow-hidden relative transition-colors duration-300 ${isDarkMode ? 'bg-zinc-950 text-zinc-200' : 'bg-gray-50 text-gray-800'}`}
       style={{ colorScheme: isDarkMode ? 'dark' : 'light' }}
@@ -1043,7 +2369,7 @@ export default function App() {
       <div className={`w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-r z-10 transition-colors duration-300 ${isDarkMode ? 'border-zinc-800 bg-zinc-900' : 'border-gray-200 bg-white'}`}>
         
         <div className={`sticky top-0 z-20 flex flex-col shadow-sm transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
-          <div className={`flex items-end px-2 pt-2 gap-1 overflow-x-auto custom-scrollbar border-b ${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-200 border-gray-300'}`}>
+          <div className={`flex items-end px-2 pt-2 gap-1 overflow-x-auto overflow-y-hidden custom-scrollbar border-b ${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-200 border-gray-300'}`}>
             {workspaces.map(ws => (
               <div
                 key={ws.id}
@@ -1362,6 +2688,10 @@ export default function App() {
               <Settings size={20} />
             </button>
 
+            <button onClick={() => setIsLogPanelOpen(true)} className={`p-2 rounded-lg transition-colors border border-transparent ${isDarkMode ? 'text-zinc-500 hover:bg-zinc-800 hover:border-zinc-700' : 'text-gray-400 hover:bg-gray-100 hover:border-gray-200'}`} title="查看应用日志">
+              <FileText size={20} />
+            </button>
+
             <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2 rounded-lg transition-colors border border-transparent ${isDarkMode ? 'text-yellow-500 hover:bg-zinc-800 hover:border-zinc-700' : 'text-gray-500 hover:bg-gray-100 hover:border-gray-200'}`} title={isDarkMode ? "切换至明亮模式" : "切换至黑暗模式"}>
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -1479,43 +2809,386 @@ export default function App() {
         </div>
       )}
 
+      {/* ================= 应用日志面板 ================= */}
+      {isLogPanelOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsLogPanelOpen(false); }}>
+          <div className={`rounded-2xl shadow-2xl p-5 w-full max-w-lg border flex flex-col max-h-[80vh] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3 shrink-0">
+              <h3 className={`font-bold flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
+                <FileText size={18} className="text-orange-500" /> 应用日志
+              </h3>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { appLogger.clear(); }} className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>清空</button>
+                <button onClick={() => setIsLogPanelOpen(false)} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'text-zinc-400 hover:bg-zinc-800' : 'text-gray-400 hover:bg-gray-100'}`}><X size={16} /></button>
+              </div>
+            </div>
+            <div className={`flex-1 overflow-y-auto custom-scrollbar rounded-lg border p-3 text-xs font-mono space-y-1 ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+              {(() => {
+                const logs = appLogger.getRecent(100);
+                if (logs.length === 0) return <div className="text-center py-8 opacity-50">暂无日志</div>;
+                return logs.map((entry, i) => (
+                  <div key={i} className={`flex gap-2 py-0.5 ${entry.level === 'error' ? (isDarkMode ? 'text-red-400' : 'text-red-600') : entry.level === 'warn' ? (isDarkMode ? 'text-yellow-400' : 'text-yellow-600') : ''}`}>
+                    <span className="opacity-40 shrink-0">{new Date(entry.ts).toLocaleTimeString()}</span>
+                    <span className={`shrink-0 w-14 text-right font-bold ${entry.level === 'error' ? 'text-red-500' : entry.level === 'warn' ? 'text-yellow-500' : 'text-blue-400'}`}>[{entry.level.toUpperCase()}]</span>
+                    <span className="opacity-60 shrink-0">{entry.source}</span>
+                    <span className="break-all">{entry.message}</span>
+                    {entry.detail && <span className="opacity-30 break-all ml-1">{entry.detail.substring(0, 120)}</span>}
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 文件夹图标/颜色浮层 ================= */}
+      {activeFolderStylePickerId && folderStylePickerPos && (() => {
+        const folder = folders.find(f => f.id === activeFolderStylePickerId);
+        if (!folder) return null;
+        const colorOption = getFolderColorOption(folder.color);
+        const iconChipClasses = isDarkMode ? colorOption.darkIcon : colorOption.lightIcon;
+        return (
+          <>
+            <div className="fixed inset-0 z-[110]" onClick={() => { setActiveFolderStylePickerId(null); setFolderStylePickerPos(null); }} />
+            <div
+              className={`fixed z-[111] rounded-xl border p-3 shadow-2xl ${isDarkMode ? 'border-zinc-800 bg-zinc-900' : 'border-gray-200 bg-white'}`}
+              style={{
+                top: folderStylePickerPos.top - 4,
+                right: window.innerWidth - folderStylePickerPos.right + 36,
+                transform: 'translateY(-100%)',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className={`text-[11px] font-semibold mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>图标</div>
+              <div className="flex flex-wrap gap-2">
+                {FOLDER_ICON_OPTIONS.map(option => {
+                  const IconComponent = option.icon;
+                  const isActive = option.id === folder.icon;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => updateFolderAppearance(folder.id, { icon: option.id })}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+                        isActive
+                          ? `border-transparent ${iconChipClasses}`
+                          : (isDarkMode ? 'border-zinc-700 bg-zinc-950 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200' : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:text-gray-700')
+                      }`}
+                      title={option.label}
+                    >
+                      <IconComponent size={15} />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className={`text-[11px] font-semibold mt-3 mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>颜色</div>
+              <div className="flex flex-wrap gap-2">
+                {FOLDER_COLOR_OPTIONS.map(option => {
+                  const isActive = option.id === folder.color;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => updateFolderAppearance(folder.id, { color: option.id })}
+                      className={`h-7 w-7 rounded-full border-2 transition-transform hover:scale-105 ${
+                        isActive
+                          ? (isDarkMode ? 'border-white' : 'border-gray-700')
+                          : (isDarkMode ? 'border-zinc-800' : 'border-white')
+                      }`}
+                      style={{ backgroundColor: option.accent }}
+                      title={option.label}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* ================= 文件夹选择弹窗 ================= */}
+      {showFolderPicker && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) closeFolderPicker(); }}>
+          <div className={`rounded-2xl shadow-2xl p-5 w-full max-w-sm border flex flex-col max-h-[80vh] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+            <h3 className={`font-bold mb-4 flex items-center gap-2 shrink-0 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
+              <FolderPlus className="w-5 h-5 text-blue-500" />
+              加入文件夹{folderPickerTarget === 'preset' ? ' (预设)' : ' (快照)'}
+            </h3>
+
+            <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar min-h-0 -mx-1 px-1">
+              {/* 移出文件夹选项 */}
+              {(() => {
+                const hasAnyInFolder = folderPickerSnapshotIds.some(id => {
+                  if (folderPickerTarget === 'preset') {
+                    const p = presets.find(x => x.id === id);
+                    return p && p.folderId;
+                  } else {
+                    const s = savedPrompts.find(s => s.id === id);
+                    return s && s.folderId;
+                  }
+                });
+                const label = folderPickerTarget === 'preset' ? '预设' : '快照';
+                return (
+                  <button
+                    onClick={hasAnyInFolder ? handlePickerRemoveFromFolder : undefined}
+                    disabled={!hasAnyInFolder}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${hasAnyInFolder ? (isDarkMode ? 'border-zinc-800 bg-zinc-950 hover:bg-zinc-800 hover:border-zinc-700' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300') : (isDarkMode ? 'border-zinc-800/50 bg-zinc-950/30 cursor-not-allowed' : 'border-gray-100 bg-gray-50/50 cursor-not-allowed')}`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${hasAnyInFolder ? (isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-500') : (isDarkMode ? 'bg-zinc-900 text-zinc-700' : 'bg-gray-100 text-gray-300')}`}>
+                      <Minus size={16} />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <div className={`text-sm font-medium truncate ${hasAnyInFolder ? (isDarkMode ? 'text-zinc-300' : 'text-gray-700') : (isDarkMode ? 'text-zinc-600' : 'text-gray-400')}`}>移出文件夹</div>
+                      <div className={`text-xs ${hasAnyInFolder ? (isDarkMode ? 'text-zinc-500' : 'text-gray-400') : (isDarkMode ? 'text-zinc-700' : 'text-gray-300')}`}>{hasAnyInFolder ? `将${label}从文件夹中移除` : `选中的${label}不在任何文件夹中`}</div>
+                    </div>
+                  </button>
+                );
+              })()}
+
+              {/* 现有文件夹列表（按 scope 过滤） */}
+              {folders.filter(f => f.scope === folderPickerTarget).map(folder => {
+                const colorOption = getFolderColorOption(folder.color);
+                const iconOption = getFolderIconOption(folder.icon);
+                const FolderGlyph = iconOption.icon;
+                const itemCount = folderPickerTarget === 'preset'
+                  ? presets.filter(p => p.folderId === folder.id).length
+                  : savedPrompts.filter(s => s.folderId === folder.id).length;
+                const itemLabel = folderPickerTarget === 'preset' ? '个预设' : '个快照';
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => handlePickerSelectFolder(folder.id)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left group ${isDarkMode ? 'border-zinc-800 bg-zinc-950 hover:bg-zinc-800 hover:border-zinc-700' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300'}`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${isDarkMode ? colorOption.darkIcon : colorOption.lightIcon}`}>
+                      <FolderGlyph size={16} />
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className={`text-sm font-medium truncate ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>{folder.name}</div>
+                      <div className={`text-xs ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                        {itemCount} {itemLabel}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* 新建文件夹区域 */}
+              {folderPickerCreating ? (
+                <div className={`flex items-center gap-2 p-3 rounded-lg border ${isDarkMode ? 'border-blue-800 bg-blue-950/20' : 'border-blue-300 bg-blue-50'}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${isDarkMode ? 'bg-blue-950/40 text-blue-300 border-blue-900/50' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+                    <FolderPlus size={16} />
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                    <input
+                      autoFocus
+                      value={folderPickerNewName}
+                      onChange={e => setFolderPickerNewName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handlePickerConfirmCreating();
+                        if (e.key === 'Escape') handlePickerCancelCreating();
+                      }}
+                      placeholder={folderPickerDefaultName || '输入文件夹名称'}
+                      className={`flex-1 min-w-0 text-sm p-1.5 rounded border outline-none focus:ring-1 focus:ring-blue-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300 placeholder-zinc-600' : 'bg-white border-gray-300 placeholder-gray-400 text-gray-800'}`}
+                    />
+                    <button
+                      onClick={handlePickerConfirmCreating}
+                      className={`px-2.5 py-1 text-xs font-bold rounded transition-colors shrink-0 bg-blue-600 text-white hover:bg-blue-500`}
+                    >
+                      确认
+                    </button>
+                    <button
+                      onClick={handlePickerCancelCreating}
+                      className={`px-2.5 py-1 text-xs rounded transition-colors shrink-0 ${isDarkMode ? 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={handlePickerStartCreating}
+                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed transition-colors ${isDarkMode ? 'border-zinc-800 text-zinc-500 hover:border-blue-800 hover:text-blue-400 hover:bg-blue-950/20' : 'border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50'}`}
+                >
+                  <Plus size={16} />
+                  <span className="text-sm font-medium">新建文件夹</span>
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={closeFolderPicker}
+              className={`w-full py-2.5 mt-4 text-sm font-bold rounded-xl transition-colors active:scale-95 shrink-0 ${isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ================= 侧边抽屉：预设库 ================= */}
       {isPresetDrawerOpen && (
         <div className="fixed inset-0 z-[100] flex justify-start">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onMouseDown={() => setIsPresetDrawerOpen(false)} />
           <div className={`relative w-80 sm:w-96 shadow-2xl h-full flex flex-col transform transition-transform duration-300 border-r ${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-gray-200'}`}>
             <div className={`p-4 border-b flex justify-between items-center transition-colors ${isDarkMode ? 'bg-purple-950/20 border-zinc-800' : 'bg-purple-50 border-purple-100'}`}>
-              <h3 className={`font-bold flex gap-2 items-center ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}><Library className="w-5 h-5"/> 我的预设库</h3>
+              <h3 className={`font-bold flex gap-2 items-center ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}><Library className="w-5 h-5"/> 我的预设库 ({presets.length})</h3>
               <button onClick={() => setIsPresetDrawerOpen(false)} className={`p-1.5 rounded-full transition-colors ${isDarkMode ? 'text-purple-500 hover:bg-purple-900/30' : 'text-purple-600 hover:bg-purple-200/50'}`}><X size={20}/></button>
             </div>
-            <div className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar ${isDarkMode ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
-              {presets.length === 0 ? (
-                <div className={`text-center py-20 flex flex-col items-center gap-3 ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>
-                  <FolderPlus className="w-10 h-10 opacity-50" />
-                  <p className="text-sm">暂无预设。<br/>点击左侧片段右上角的 📁 按钮，<br/>即可将常用片段存入此库。</p>
-                </div>
-              ) : (
-                presets.map(p => (
-                  <div key={p.id} className={`border rounded-xl p-4 transition-all group relative shadow-sm ${isDarkMode ? 'bg-zinc-900/80 border-purple-900/30 hover:border-purple-700' : 'bg-white border-purple-100 hover:border-purple-300'}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      {editingPresetTitleId === p.id ? (
-                        <input autoFocus value={p.title} onChange={e => setPresets(presets.map(px => px.id === p.id ? {...px, title: e.target.value} : px))} onBlur={() => updatePresetTitle(p.id, p.title)} onKeyDown={e => e.key === 'Enter' && updatePresetTitle(p.id, p.title)} className={`text-sm font-bold border rounded px-1.5 py-0.5 outline-none w-full mr-6 ${isDarkMode ? 'bg-zinc-950 border-purple-700 text-zinc-200' : 'bg-purple-50 border-purple-300 text-gray-800'}`} />
-                      ) : (
-                        <span onDoubleClick={() => setEditingPresetTitleId(p.id)} className={`text-sm font-bold truncate pr-6 cursor-text rounded px-1 transition-colors ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-gray-800 hover:bg-purple-50'}`} title="双击重命名">{p.title}</span>
-                      )}
-                      <button onClick={() => deletePreset(p.id)} className={`absolute top-4 right-4 transition-colors opacity-0 group-hover:opacity-100 ${isDarkMode ? 'text-zinc-600 hover:text-red-400' : 'text-gray-300 hover:text-red-500'}`}><Trash2 size={16}/></button>
-                    </div>
-                    
-                    <div className={`text-xs line-clamp-2 mb-4 p-2 rounded-lg border ${isDarkMode ? 'text-zinc-500 bg-zinc-950/50 border-zinc-800/50' : 'text-gray-500 bg-gray-50 border-gray-100'}`}>
-                      {p.isTextMode ? p.text : (p.tags && p.tags.length > 0 ? p.tags.map(t => t.text).join(', ') : '空预设')}
-                    </div>
-
-                    <button onClick={() => insertPreset(p)} className={`w-full py-2.5 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.98] ${isDarkMode ? 'bg-purple-900/20 text-purple-400 hover:bg-purple-900/40' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}>
-                      <Plus className="w-4 h-4"/> 追加到当前工作区
-                    </button>
+            <div className={`flex-1 overflow-y-auto p-4 custom-scrollbar ${isDarkMode ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
+              <div className="space-y-4">
+                {/* 搜索 + 批量操作工具栏 */}
+                <div className={`rounded-xl border p-3 space-y-3 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/70' : 'border-gray-200 bg-white/90'}`}>
+                  <div className="relative">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} size={15} />
+                    <input
+                      value={presetSearchQuery}
+                      onChange={e => setPresetSearchQuery(e.target.value)}
+                      className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors ${
+                        isDarkMode ? 'border-zinc-800 bg-zinc-950 text-zinc-200 focus:border-purple-700' : 'border-gray-200 bg-gray-50 text-gray-700 focus:border-purple-300'
+                      }`}
+                      placeholder="搜索预设标题、内容或标签"
+                    />
                   </div>
-                ))
-              )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={togglePresetBatchMode}
+                      className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                        isPresetBatchMode
+                          ? (isDarkMode ? 'bg-purple-900/40 text-purple-300' : 'bg-purple-100 text-purple-700')
+                          : (isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                      }`}
+                    >
+                      {isPresetBatchMode ? '退出批量' : '批量管理'}
+                    </button>
+
+                    {isPresetBatchMode && (
+                      <>
+                        <button
+                          onClick={toggleSelectAllVisiblePresets}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                            isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {allVisiblePresetsSelected ? '取消全选' : '全选当前结果'}
+                        </button>
+                        <button
+                          onClick={() => promptAssignFolderForPresets(selectedPresetIds)}
+                          disabled={selectedPresetIds.length === 0}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                            selectedPresetIds.length === 0
+                              ? 'opacity-50 cursor-not-allowed ' + (isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-gray-100 text-gray-400')
+                              : (isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                          }`}
+                        >
+                          批量加入文件夹
+                        </button>
+                        <button
+                          onClick={handleBatchDeletePresets}
+                          disabled={selectedPresetIds.length === 0}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                            selectedPresetIds.length === 0
+                              ? 'opacity-50 cursor-not-allowed ' + (isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-gray-100 text-gray-400')
+                              : (isDarkMode ? 'bg-red-950/40 text-red-300 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100')
+                          }`}
+                        >
+                          批量删除
+                        </button>
+                        <div className={`px-3 py-2 text-xs rounded-lg ${isDarkMode ? 'bg-zinc-950 text-zinc-400' : 'bg-gray-100 text-gray-500'}`}>
+                          已选 {selectedPresetIds.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* 预设列表（文件夹分组） */}
+                {presets.length === 0 ? (
+                  <div className={`text-center py-20 flex flex-col items-center gap-3 ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>
+                    <FolderPlus className="w-10 h-10 opacity-50" />
+                    <p className="text-sm">暂无预设。<br/>点击左侧片段右上角的 📁 按钮，<br/>即可将常用片段存入此库。</p>
+                  </div>
+                ) : matchedPresets.length === 0 ? (
+                  <div className={`text-center py-16 italic ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>没有匹配的预设</div>
+                ) : (
+                  <>
+                    {/* 文件夹分组 */}
+                    {groupedFilteredPresets.folders.map(group => {
+                      const colorOption = getFolderColorOption(group.folderColor);
+                      const iconOption = getFolderIconOption(group.folderIcon);
+                      const FolderGlyph = iconOption.icon;
+                      const countLabel = isPresetSearchActive ? `${group.matchedCount} / ${group.totalCount}` : `${group.totalCount}`;
+                      return (
+                        <section key={group.folderId} className="space-y-3">
+                          <div className="space-y-2">
+                            <div
+                              onClick={() => togglePresetFolderExpanded(group.folderId)}
+                              className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-colors cursor-pointer ${
+                                group.isExpanded
+                                  ? (isDarkMode ? colorOption.darkRow : colorOption.lightRow)
+                                  : (isDarkMode ? 'border-zinc-800 bg-zinc-900/70' : 'border-gray-200 bg-white')
+                              }`}
+                            >
+                              <div className="min-w-0 flex flex-1 items-center gap-2">
+                                <div className={`flex items-center gap-2 min-w-0 flex-1 ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
+                                  <ChevronDown size={15} className={`shrink-0 transition-transform ${group.isExpanded ? 'rotate-0' : '-rotate-90'}`} />
+                                  <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${isDarkMode ? colorOption.darkIcon : colorOption.lightIcon}`}>
+                                    <FolderGlyph size={14} />
+                                  </span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className={`max-w-full truncate px-1.5 py-0.5 text-left text-sm font-semibold block ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
+                                    {group.folderName}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="ml-3 flex shrink-0 items-center gap-2">
+                                <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tabular-nums ${isDarkMode ? colorOption.darkBadge : colorOption.lightBadge}`}>
+                                  {countLabel}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); openFolderDeleteDialog(group.folderId, group.folderName, 'preset'); }}
+                                  className={`rounded-lg p-1.5 transition-colors ${isDarkMode ? 'text-zinc-400 hover:bg-red-950/30 hover:text-red-300' : 'text-gray-500 hover:bg-red-50 hover:text-red-500'}`}
+                                  title="删除文件夹"
+                                >
+                                  <Trash2 size={14}/>
+                                </button>
+                              </div>
+                            </div>
+
+                            {group.isExpanded && (
+                              <div className="space-y-3 ml-4 pl-4 relative">
+                                {group.items.map(p => renderPresetCard(p, {
+                                  isNested: true,
+                                  accentColor: colorOption.accent,
+                                  hideFolderLabel: true,
+                                }))}
+                              </div>
+                            )}
+                          </div>
+                        </section>
+                      );
+                    })}
+
+                    {/* 未分组的预设 */}
+                    {groupedFilteredPresets.ungrouped.length > 0 && (
+                      <section className="space-y-3">
+                        <div className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                          isDarkMode ? 'border-zinc-800 bg-zinc-900/70 text-zinc-200' : 'border-gray-200 bg-white text-gray-700'
+                        }`}>
+                          未分组
+                        </div>
+                        <div className="space-y-3">
+                          {groupedFilteredPresets.ungrouped.map(p => renderPresetCard(p))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1540,30 +3213,149 @@ export default function App() {
                 <button onClick={() => setIsDrawerOpen(false)} className={`p-1.5 rounded-full transition-colors ${isDarkMode ? 'text-zinc-500 hover:bg-zinc-800' : 'text-blue-600 hover:bg-blue-100'}`}><X className="w-5 h-5" /></button>
               </div>
             </div>
-            <div className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar ${isDarkMode ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
-              {savedPrompts.length === 0 ? (
-                <div className={`text-center py-20 italic ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>暂无历史快照</div>
-              ) : (
-                savedPrompts.map(p => (
-                  <div key={p.id} className={`border rounded-xl p-4 transition-all group relative shadow-sm ${isDarkMode ? 'bg-zinc-900/80 border-blue-900/30 hover:border-blue-700' : 'bg-white border-gray-100 hover:border-blue-200'}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      {editingSavedTitleId === p.id ? (
-                        <input autoFocus value={p.title} onChange={e => updateSavedTitle(p.id, e.target.value)} onBlur={() => setEditingSavedTitleId(null)} onKeyDown={e => e.key === 'Enter' && setEditingSavedTitleId(null)} className={`text-sm font-bold border rounded px-1.5 py-0.5 outline-none w-full mr-6 ${isDarkMode ? 'bg-zinc-950 border-blue-700 text-zinc-200' : 'bg-blue-50 border-blue-300 text-gray-800'}`} />
-                      ) : (
-                        <span onDoubleClick={() => setEditingSavedTitleId(p.id)} className={`text-sm font-bold truncate pr-6 cursor-text rounded px-1 transition-colors ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-gray-800 hover:bg-blue-50'}`} title="双击重命名">{p.title}</span>
-                      )}
-                      <button onClick={() => deleteSnapshot(p.id)} className={`absolute top-4 right-4 transition-colors opacity-0 group-hover:opacity-100 ${isDarkMode ? 'text-zinc-600 hover:text-red-400' : 'text-gray-300 hover:text-red-500'}`}><Trash2 size={16}/></button>
-                    </div>
-                    <div className={`text-[10px] mb-4 flex items-center gap-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}><Clock size={10}/> {new Date(p.timestamp).toLocaleString()}</div>
-                    <div className="flex gap-2">
-                      <button onClick={() => {updateActiveWorkspace({ inputs: p.inputs, separator: p.separator || '\\n\\n', name: p.title, isDirty: false }); setIsDrawerOpen(false);}} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1 active:scale-95 ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}><FileUp size={14}/> 加载到当前工作区</button>
-                      <button onClick={() => executeCopy(p.inputs.filter(i => i.isActive).map(i => i.text).join((p.separator || '\\n\\n').replace(/\\n/g, '\n')), p.id)} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 active:scale-95 ${copiedDrawerId === p.id ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-green-100 text-green-700') : (isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}`}>
-                        {copiedDrawerId === p.id ? <Check size={14}/> : <Copy size={14}/>} {copiedDrawerId === p.id ? '已复制' : '复制内容'}
-                      </button>
-                    </div>
+            <div className={`flex-1 overflow-y-auto p-4 custom-scrollbar ${isDarkMode ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
+              <div className="space-y-4">
+                <div className={`rounded-xl border p-3 space-y-3 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/70' : 'border-gray-200 bg-white/90'}`}>
+                  <div className="relative">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} size={15} />
+                    <input
+                      value={snapshotSearchQuery}
+                      onChange={e => setSnapshotSearchQuery(e.target.value)}
+                      className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors ${
+                        isDarkMode ? 'border-zinc-800 bg-zinc-950 text-zinc-200 focus:border-blue-700' : 'border-gray-200 bg-gray-50 text-gray-700 focus:border-blue-300'
+                      }`}
+                      placeholder="搜索标题、文件夹或输出内容"
+                    />
                   </div>
-                ))
-              )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={toggleSnapshotBatchMode}
+                      className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                        isSnapshotBatchMode
+                          ? (isDarkMode ? 'bg-blue-900/40 text-blue-300' : 'bg-blue-100 text-blue-700')
+                          : (isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                      }`}
+                    >
+                      {isSnapshotBatchMode ? '退出批量' : '批量管理'}
+                    </button>
+
+                    {isSnapshotBatchMode && (
+                      <>
+                        <button
+                          onClick={toggleSelectAllVisibleSnapshots}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                            isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {allVisibleSnapshotsSelected ? '取消全选' : '全选当前结果'}
+                        </button>
+                        <button
+                          onClick={() => promptAssignFolderForSnapshots(selectedSnapshotIds)}
+                          disabled={selectedSnapshotIds.length === 0}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                            selectedSnapshotIds.length === 0
+                              ? 'opacity-50 cursor-not-allowed ' + (isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-gray-100 text-gray-400')
+                              : (isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                          }`}
+                        >
+                          批量加入文件夹
+                        </button>
+                        <button
+                          onClick={handleBatchDeleteSnapshots}
+                          disabled={selectedSnapshotIds.length === 0}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
+                            selectedSnapshotIds.length === 0
+                              ? 'opacity-50 cursor-not-allowed ' + (isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-gray-100 text-gray-400')
+                              : (isDarkMode ? 'bg-red-950/40 text-red-300 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100')
+                          }`}
+                        >
+                          批量删除
+                        </button>
+                        <div className={`px-3 py-2 text-xs rounded-lg ${isDarkMode ? 'bg-zinc-950 text-zinc-400' : 'bg-gray-100 text-gray-500'}`}>
+                          已选 {selectedSnapshotIds.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {savedPrompts.length === 0 ? (
+                  <div className={`text-center py-20 italic ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>暂无历史快照</div>
+                ) : matchedSavedPrompts.length === 0 ? (
+                  <div className={`text-center py-16 italic ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>没有匹配的快照</div>
+                ) : (
+                  <>
+                    {groupedFilteredSavedPrompts.folders.map(renderFolderSection)}
+
+                    {groupedFilteredSavedPrompts.ungrouped.length > 0 && (
+                      <section className="space-y-3">
+                        <div className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                          isDarkMode ? 'border-zinc-800 bg-zinc-900/70 text-zinc-200' : 'border-gray-200 bg-white text-gray-700'
+                        }`}>
+                          未分组
+                        </div>
+
+                        <div className="space-y-3">
+                          {groupedFilteredSavedPrompts.ungrouped.map(snapshot => renderSnapshotCard(snapshot))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDrawerOpen && hoveredSnapshot && snapshotPreviewPosition && snapshotPreviewMap[hoveredSnapshot.id] && (
+        <div
+          onMouseEnter={clearSnapshotPreviewCloseTimer}
+          onMouseLeave={scheduleCloseSnapshotPreview}
+          className={`fixed z-[125] rounded-2xl border shadow-2xl backdrop-blur-sm ${
+            isDarkMode ? 'border-zinc-800 bg-zinc-950/95 text-zinc-200' : 'border-gray-200 bg-white/95 text-gray-800'
+          }`}
+          style={{
+            top: `${snapshotPreviewPosition.top}px`,
+            left: `${snapshotPreviewPosition.left}px`,
+            width: `${snapshotPreviewPosition.width}px`,
+            maxHeight: `${snapshotPreviewPosition.maxHeight}px`
+          }}
+        >
+          <div className={`px-4 py-3 border-b text-sm font-semibold ${
+            isDarkMode ? 'border-zinc-800 text-zinc-200' : 'border-gray-200 text-gray-700'
+          }`}>
+            {hoveredSnapshot.title}
+          </div>
+          <div className={`px-4 py-3 text-xs leading-6 whitespace-pre-wrap break-words overflow-y-auto custom-scrollbar ${
+            isDarkMode ? 'text-zinc-300' : 'text-gray-600'
+          }`} style={{ maxHeight: `${snapshotPreviewPosition.maxHeight - 49}px` }}>
+            {snapshotPreviewMap[hoveredSnapshot.id]}
+          </div>
+        </div>
+      )}
+
+      {folderDeleteTarget && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setFolderDeleteTarget(null); }}>
+          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-md border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+            <h3 className={`font-bold text-lg mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
+              删除文件夹"{folderDeleteTarget.folderName}"
+            </h3>
+            <p className={`text-sm leading-6 mb-6 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+              你可以删除整个文件夹及其中{folderDeleteTarget.scope === 'preset' ? '预设' : '快照'}，或仅解散文件夹并把里面的{folderDeleteTarget.scope === 'preset' ? '预设' : '快照'}放回列表中。
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <button onClick={handleDeleteFolderWithContents} className={`w-full py-3 text-sm font-bold rounded-xl transition-colors ${isDarkMode ? 'bg-red-950/40 text-red-300 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}>
+                删除文件夹和内容
+              </button>
+              <button onClick={handleDissolveFolder} className={`w-full py-3 text-sm font-bold rounded-xl transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                只解散文件夹
+              </button>
+              <button onClick={() => setFolderDeleteTarget(null)} className={`w-full py-3 text-sm font-bold rounded-xl transition-colors ${isDarkMode ? 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>
+                取消
+              </button>
             </div>
           </div>
         </div>
@@ -1709,6 +3501,32 @@ export default function App() {
         </div>
       )}
 
+      {pendingImportPayload && (
+        <div className="fixed inset-0 z-[128] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) closeImportModeModal(); }}>
+          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-md border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+            <h3 className={`font-bold mb-2 text-lg flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
+              <AlertTriangle className="w-5 h-5 text-amber-500" /> 导入快照方式
+            </h3>
+            <p className={`text-sm mb-6 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
+              当前列表里已有 <span className={`font-bold px-1 rounded ${isDarkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-50'}`}>{pendingImportPayload.currentSnapshotCount}</span> 条快照，
+              这次要导入 <span className={`font-bold px-1 rounded ${isDarkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-50'}`}>{pendingImportPayload.importedSnapshotCount}</span> 条快照。
+              请选择先清空当前快照列表再导入，还是直接合并到现有列表。工作区、预设和设置仍会按原逻辑导入。
+            </p>
+            <div className="flex flex-col gap-3">
+              <button onClick={() => handleImportWithMode('replace')} className={`w-full py-2.5 text-sm font-bold rounded-xl transition-colors border active:scale-[0.98] ${isDarkMode ? 'bg-red-950/30 text-red-400 border-red-900/50 hover:bg-red-900/40' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}>
+                清空当前快照后导入
+              </button>
+              <button onClick={() => handleImportWithMode('merge')} className={`w-full py-2.5 text-sm font-bold text-white rounded-xl shadow-md transition-colors active:scale-[0.98] ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                合并到当前列表
+              </button>
+              <button onClick={closeImportModeModal} className={`w-full py-2.5 text-sm font-bold rounded-xl transition-colors active:scale-[0.98] ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isConflictModalOpen && (
         <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancelConflict(); }}>
           <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-sm border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
@@ -1784,5 +3602,6 @@ export default function App() {
         .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #52525b; }
       `}} />
     </div>
+    </ErrorBoundary>
   );
 }

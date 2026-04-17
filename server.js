@@ -153,6 +153,11 @@ const isValidWorkspacePayload = (payload) => {
 
 const isValidSavedPayload = (payload) => Array.isArray(payload);
 const isValidPresetsPayload = (payload) => Array.isArray(payload);
+const isValidFoldersPayload = (payload) => Array.isArray(payload) && payload.every(f =>
+  typeof f === 'object' && f !== null &&
+  typeof f.id === 'string' && f.id.trim().length > 0 &&
+  typeof f.name === 'string' && f.name.trim().length > 0
+);
 
 const authMiddleware = (req, res, next) => {
   const header = req.headers.authorization;
@@ -273,12 +278,13 @@ app.post('/api/change-password', authMiddleware, async (req, res) => {
 app.get('/api/data', authMiddleware, async (req, res) => {
   try {
     const username = req.user.username;
-    const [workspace, savedPrompts, presets] = await Promise.all([
+    const [workspace, savedPrompts, presets, folders] = await Promise.all([
       readUserJson(username, 'workspace', null),
       readUserJson(username, 'saved', []),
       readUserJson(username, 'presets', []),
+      readUserJson(username, 'folders', []),
     ]);
-    return res.json({ workspace, savedPrompts, presets });
+    return res.json({ workspace, savedPrompts, presets, folders });
   } catch (error) {
     console.error('[数据读取] 失败:', error);
     return res.status(500).json({ error: '读取数据失败' });
@@ -330,6 +336,22 @@ app.post('/api/presets', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('[预设保存] 失败:', error);
     return res.status(500).json({ error: '保存预设失败' });
+  }
+});
+
+app.post('/api/folders', authMiddleware, async (req, res) => {
+  if (!isValidFoldersPayload(req.body)) {
+    return res.status(400).json({ error: '文件夹数据格式不正确' });
+  }
+
+  try {
+    await withLock(`folders:${req.user.username}`, async () => {
+      await writeUserJson(req.user.username, 'folders', req.body);
+    });
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('[文件夹保存] 失败:', error);
+    return res.status(500).json({ error: '保存文件夹失败' });
   }
 });
 
