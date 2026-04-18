@@ -14,7 +14,9 @@ services:
       - PORT=3001
       - DATA_DIR=/app/data
       - NODE_ENV=production
-      - JWT_SECRET=mtz+dbyg9g/LW3PkQ4WvJOhHYXtwVDaETRRrCaEWN9k=
+      # ⚠️ 必须修改！不要使用默认值，用以下命令生成：
+      # openssl rand -base64 32
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     deploy:
       resources:
         limits:

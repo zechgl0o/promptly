@@ -6,3 +6,9 @@ data/
 .env.local
 .DS_Store
 Thumbs.db
+
+# Refactor backups
+.backup/
+
+# WorkBuddy internal files
+.workbuddy/
