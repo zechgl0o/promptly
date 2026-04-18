@@ -64,14 +64,6 @@ export default function App() {
   // ---------------- Hook 调用 ----------------
   const { isDarkMode, setIsDarkMode } = useTheme();
   const {
-    currentUser, setCurrentUser, authToken, setAuthToken,
-    authView, setAuthView, authForm, setAuthForm,
-    authLoading, authError, setAuthError,
-    showChangePassword, setShowChangePassword,
-    changePasswordForm, setChangePasswordForm,
-    authFetch, handleLogin, handleRegister, handleLogout, handleChangePassword,
-  } = useAuth({ setSuccessMessage, setDataLoaded });
-  const {
     transConfig, setTransConfig,
     expandedApiId, setExpandedApiId,
     confirmDeleteApiId, setConfirmDeleteApiId,
@@ -86,6 +78,14 @@ export default function App() {
     setInputs, setSeparator, updateActiveWorkspace,
     handleAddTab, executeCloseTab, handleCloseTabClick, handleWorkspaceNameChange,
   } = useWorkspaces();
+  const {
+    currentUser, setCurrentUser, authToken, setAuthToken,
+    authView, setAuthView, authForm, setAuthForm,
+    authLoading, authError, setAuthError,
+    showChangePassword, setShowChangePassword,
+    changePasswordForm, setChangePasswordForm,
+    authFetch, handleLogin, handleRegister, handleLogout, handleChangePassword,
+  } = useAuth({ setSuccessMessage, setDataLoaded });
   const {
     savedPrompts, setSavedPrompts, folders, setFolders, presets, setPresets,
     snapshotPreviewPosition,
@@ -1780,7 +1780,7 @@ export default function App() {
         successMessage={successMessage}
       />
 
-      <LogPanel isDarkMode={isDarkMode} isLogPanelOpen={isLogPanelOpen} setIsLogPanelOpen={setIsLogPanelOpen} />
+      {isLogPanelOpen && <LogPanel isDarkMode={isDarkMode} setIsLogPanelOpen={setIsLogPanelOpen} />}
       <FolderStylePicker
         isDarkMode={isDarkMode}
         activeFolderStylePickerId={activeFolderStylePickerId}
