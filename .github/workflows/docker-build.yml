@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     tags: ['v*']
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 env:
   REGISTRY: docker.io
@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU（多架构支持）
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -33,17 +33,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata（标签和版本）
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # 推送 main 分支时打 latest 标签
             type=raw,value=latest,enable={{is_default_branch}}
-            # 推送 v1.0.0 tag 时打 1.0.0 标签
             type=semver,pattern={{version}}
-            # 每次 commit 都打 short SHA 标签
             type=sha,prefix=
 
       - name: Build and push Docker image

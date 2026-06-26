@@ -22,7 +22,7 @@ export default function FolderStylePicker({
     <>
       <div className="fixed inset-0 z-[110]" onClick={() => { setActiveFolderStylePickerId(null); setFolderStylePickerPos(null); }} />
       <div
-        className={`fixed z-[111] rounded-xl border p-3 shadow-2xl ${isDarkMode ? 'border-zinc-800 bg-zinc-900' : 'border-gray-200 bg-white'}`}
+        className="app-modal fixed z-[111] rounded-xl border p-3"
         style={{
           top: folderStylePickerPos.top - 4,
           right: window.innerWidth - folderStylePickerPos.right + 36,
@@ -30,7 +30,7 @@ export default function FolderStylePicker({
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div className={`text-[11px] font-semibold mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>图标</div>
+        <div className="text-[11px] font-semibold mb-2 text-[var(--app-muted)]">图标</div>
         <div className="flex flex-wrap gap-2">
           {FOLDER_ICON_OPTIONS.map(option => {
             const IconComponent = option.icon;
@@ -43,7 +43,7 @@ export default function FolderStylePicker({
                 className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
                   isActive
                     ? `border-transparent ${iconChipClasses}`
-                    : (isDarkMode ? 'border-zinc-700 bg-zinc-950 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200' : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:text-gray-700')
+                    : 'app-secondary-action'
                 }`}
                 title={option.label}
               >
@@ -53,7 +53,7 @@ export default function FolderStylePicker({
           })}
         </div>
 
-        <div className={`text-[11px] font-semibold mt-3 mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>颜色</div>
+        <div className="text-[11px] font-semibold mt-3 mb-2 text-[var(--app-muted)]">颜色</div>
         <div className="flex flex-wrap gap-2">
           {FOLDER_COLOR_OPTIONS.map(option => {
             const isActive = option.id === folder.color;

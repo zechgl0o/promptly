@@ -34,24 +34,22 @@ export default function PresetDrawer({
   return (
 
   <div className="fixed inset-0 z-[100] flex justify-start">
-    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onMouseDown={() => setIsPresetDrawerOpen(false)} />
-    <div className={`relative w-80 sm:w-96 shadow-2xl h-full flex flex-col transform transition-transform duration-300 border-r ${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-gray-200'}`}>
-      <div className={`p-4 border-b flex justify-between items-center transition-colors ${isDarkMode ? 'bg-purple-950/20 border-zinc-800' : 'bg-purple-50 border-purple-100'}`}>
-        <h3 className={`font-bold flex gap-2 items-center ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}><Library className="w-5 h-5"/> 我的预设库 ({presets.length})</h3>
-        <button onClick={() => setIsPresetDrawerOpen(false)} className={`p-1.5 rounded-full transition-colors ${isDarkMode ? 'text-purple-500 hover:bg-purple-900/30' : 'text-purple-600 hover:bg-purple-200/50'}`}><X size={20}/></button>
+    <div className="app-overlay absolute inset-0 transition-opacity" onMouseDown={() => setIsPresetDrawerOpen(false)} />
+    <div className="app-drawer relative w-80 sm:w-96 h-full flex flex-col transform transition-transform duration-300 border-r">
+      <div className="app-drawer-header p-4 border-b flex justify-between items-center transition-colors">
+        <h3 className="font-bold flex gap-2 items-center text-[var(--app-text)]"><Library className="w-5 h-5 text-[var(--app-brand)]"/> 我的预设库 ({presets.length})</h3>
+        <button onClick={() => setIsPresetDrawerOpen(false)} className="tool-button h-8 w-8 text-[var(--app-muted)]"><X size={20}/></button>
       </div>
-      <div className={`flex-1 overflow-y-auto p-4 custom-scrollbar ${isDarkMode ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
+      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-[color-mix(in_srgb,var(--app-surface-soft)_72%,transparent)]">
         <div className="space-y-4">
           {/* 搜索 + 批量操作工具栏 */}
-          <div className={`rounded-xl border p-3 space-y-3 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/70' : 'border-gray-200 bg-white/90'}`}>
+          <div className="app-subpanel p-3 space-y-3">
             <div className="relative">
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} size={15} />
               <input
                 value={presetSearchQuery}
                 onChange={e => setPresetSearchQuery(e.target.value)}
-                className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors ${
-                  isDarkMode ? 'border-zinc-800 bg-zinc-950 text-zinc-200 focus:border-purple-700' : 'border-gray-200 bg-gray-50 text-gray-700 focus:border-purple-300'
-                }`}
+                className="app-input w-full rounded-lg py-2 pl-9 pr-3 text-sm"
                 placeholder="搜索预设标题、内容或标签"
               />
             </div>
@@ -61,7 +59,7 @@ export default function PresetDrawer({
                 onClick={togglePresetBatchMode}
                 className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
                   isPresetBatchMode
-                    ? (isDarkMode ? 'bg-purple-900/40 text-purple-300' : 'bg-purple-100 text-purple-700')
+                    ? 'bg-[var(--app-brand-soft)] text-[var(--app-brand)]'
                     : (isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
                 }`}
               >

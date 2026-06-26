@@ -1,22 +1,26 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { generateId, API_BASE, DEFAULT_FOLDER_COLOR, DEFAULT_FOLDER_ICON } from '../lib/constants';
+import { generateId, DEFAULT_FOLDER_COLOR, DEFAULT_FOLDER_ICON } from '../lib/constants';
 import { buildOutputTextFromInputs } from '../lib/parser';
 import { appLogger } from '../lib/logger';
 
+const LOCAL_KEYS = {
+  SAVED: 'promptly_saved_prompts',
+  FOLDERS: 'promptly_folders',
+  PRESETS: 'promptly_presets',
+};
+
+// 本地存储 Keys
 /**
  * useDataStore — 快照 + 预设 + 文件夹 的统一数据管理 hook
  * 
- * 将三者合并为一个 hook 是因为它们深度交叉：
- * - 文件夹选择器同时操作快照和预设的 folderId
- * - 删除文件夹需要同时清理快照/预设的引用
- * - 分组计算依赖 folders 实体
+ * 本地单用户模式：使用 localStorage 存储数据
  * 
  * 外部依赖：
- * - authFetch: 用于同步到后端
+ * - authFetch: 本地模式下返回空操作
  * - setErrorMessage: 用于显示错误提示
  */
 export function useDataStore({ authFetch, setErrorMessage }) {
-  // ===================== 核心数据 =====================
+  // ===================== 核心数据（从 localStorage 加载）=====================
   const [savedPrompts, setSavedPrompts] = useState([]);
   const [folders, setFolders] = useState([]);
   const [presets, setPresets] = useState([]);
@@ -277,10 +281,13 @@ export function useDataStore({ authFetch, setErrorMessage }) {
     if (!previewText || !element) return;
     clearSnapshotPreviewCloseTimer();
     const rect = element.getBoundingClientRect();
-    const width = Math.min(360, Math.max(260, rect.left - 24));
+    const drawerRect = document.querySelector('[data-snapshot-drawer="true"]')?.getBoundingClientRect();
+    const anchorLeft = drawerRect?.left || rect.left;
+    const availableLeft = Math.max(0, anchorLeft - 24);
+    const width = Math.min(520, Math.max(300, availableLeft));
     const maxHeight = Math.min(420, Math.max(180, window.innerHeight - 32));
     const top = Math.max(16, Math.min(rect.top, window.innerHeight - maxHeight - 16));
-    const left = Math.max(16, rect.left - width - 12);
+    const left = Math.max(16, anchorLeft - width - 12);
     setHoveredSnapshotId(snapshotId);
     setSnapshotPreviewPosition({ top, left, width, maxHeight });
   }, [snapshotPreviewMap, clearSnapshotPreviewCloseTimer]);
@@ -489,38 +496,48 @@ export function useDataStore({ authFetch, setErrorMessage }) {
     }
   }, [savedPrompts, folders, editingFolderId, activeFolderStylePickerId]);
 
-  // ===================== 后端同步 =====================
-  const syncSnapshots = useCallback(async ({ dataLoaded, authToken, setCurrentUser, setAuthToken }) => {
-    if (!dataLoaded || !authToken) return;
-    const timer = setTimeout(async () => {
+  // ===================== 后端同步（本地模式：保存到 localStorage）=====================
+  const syncSnapshots = useCallback(async ({ dataLoaded, authToken }) => {
+    if (!dataLoaded) return;
+    const timer = setTimeout(() => {
       try {
-        const res = await authFetch(`${API_BASE}/saved`, { method: 'POST', body: JSON.stringify(savedPrompts) });
-        if (res.status === 401) { setCurrentUser(null); setAuthToken(null); return; }
-        if (!res.ok) throw new Error('Save snapshots failed');
-      } catch (e) { console.error("保存快照失败", e); appLogger.error('sync', '保存快照失败', e.message); }
+        localStorage.setItem(LOCAL_KEYS.SAVED, JSON.stringify(savedPrompts));
+        appLogger.info('sync', '快照已保存到本地');
+      } catch (e) {
+        console.error("保存快照失败", e);
+        appLogger.error('sync', '保存快照失败', e.message);
+      }
     }, 800);
     return () => clearTimeout(timer);
-  }, [savedPrompts, authFetch]);
+  }, [savedPrompts]);
 
   const syncFolders = useCallback(async ({ dataLoaded, authToken }) => {
-    if (!dataLoaded || !authToken) return;
-    const timer = setTimeout(async () => {
+    if (!dataLoaded) return;
+    const timer = setTimeout(() => {
       try {
-        await authFetch(`${API_BASE}/folders`, { method: 'POST', body: JSON.stringify(folders) });
-      } catch (e) { console.error("保存文件夹失败", e); appLogger.error('sync', '保存文件夹失败', e.message); }
+        localStorage.setItem(LOCAL_KEYS.FOLDERS, JSON.stringify(folders));
+        appLogger.info('sync', '文件夹已保存到本地');
+      } catch (e) {
+        console.error("保存文件夹失败", e);
+        appLogger.error('sync', '保存文件夹失败', e.message);
+      }
     }, 800);
     return () => clearTimeout(timer);
-  }, [folders, authFetch]);
+  }, [folders]);
 
   const syncPresets = useCallback(async ({ dataLoaded, authToken }) => {
-    if (!dataLoaded || !authToken) return;
-    const timer = setTimeout(async () => {
+    if (!dataLoaded) return;
+    const timer = setTimeout(() => {
       try {
-        await authFetch(`${API_BASE}/presets`, { method: 'POST', body: JSON.stringify(presets) });
-      } catch (e) { console.error("保存预设失败", e); appLogger.error('sync', '保存预设失败', e.message); }
+        localStorage.setItem(LOCAL_KEYS.PRESETS, JSON.stringify(presets));
+        appLogger.info('sync', '预设已保存到本地');
+      } catch (e) {
+        console.error("保存预设失败", e);
+        appLogger.error('sync', '保存预设失败', e.message);
+      }
     }, 800);
     return () => clearTimeout(timer);
-  }, [presets, authFetch]);
+  }, [presets]);
 
   // ===================== 返回 =====================
   return {

@@ -9,11 +9,13 @@ export default function Modals({
 
   // ---- 翻译设置 ----
   isTransConfigModalOpen, setIsTransConfigModalOpen,
-  transConfig, setTransConfig,
-  expandedApiId, confirmDeleteApiId,
-  handleUpdateCustomApi, handleDeleteCustomApi,
-  toggleExpandApi, setConfirmDeleteApiId,
-  handleAddCustomApi, handleSaveTransConfig,
+  handleSaveTransConfig,
+  handleLogout,
+  // ---- 新 API ----
+  aiConfig,
+  appSettings, updateAppSettings,
+  addProvider, updateProvider, deleteProvider,
+  setTranslationProviderId, setConversionProviderId,
 
   // ---- 文件夹删除 ----
   folderDeleteTarget, setFolderDeleteTarget,
@@ -27,6 +29,10 @@ export default function Modals({
   // ---- 保存快照（含关闭警告页共享的 setter） ----
   isSaveModalOpen, setIsSaveModalOpen,
   saveTitle, setSaveTitle,
+  snapshotImageDataUrl, setSnapshotImageDataUrl,
+  snapshotImagePlatform, setSnapshotImagePlatform,
+  snapshotImageCustomPlatform, setSnapshotImageCustomPlatform,
+  clearSnapshotImageForm,
   saveInputRef,
   handlePreSave, adjustSaveTitleNumber, hasSaveTitleNumber,
 
@@ -56,30 +62,47 @@ export default function Modals({
   // ---- 全局提示 Toast ----
   errorMessage, successMessage,
 }) {
+  const handleSnapshotImagePaste = (event) => {
+    const item = Array.from(event.clipboardData?.items || []).find(entry => entry.type.startsWith('image/'));
+    if (!item) return;
+    event.preventDefault();
+    const file = item.getAsFile();
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setSnapshotImageDataUrl(reader.result || '');
+    reader.readAsDataURL(file);
+  };
+
+  const closeSaveModal = () => {
+    setIsSaveModalOpen(false);
+    setPendingCloseTabId(null);
+    clearSnapshotImageForm?.();
+  };
+
   return (
     <>
       {/* ================= 翻译设置弹窗 ================= */}
       {isTransConfigModalOpen && (
         <TransConfigModal
           isDarkMode={isDarkMode}
-          transConfig={transConfig}
-          setTransConfig={setTransConfig}
-          expandedApiId={expandedApiId}
-          confirmDeleteApiId={confirmDeleteApiId}
           setIsTransConfigModalOpen={setIsTransConfigModalOpen}
-          handleUpdateCustomApi={handleUpdateCustomApi}
-          handleDeleteCustomApi={handleDeleteCustomApi}
-          toggleExpandApi={toggleExpandApi}
-          setConfirmDeleteApiId={setConfirmDeleteApiId}
-          handleAddCustomApi={handleAddCustomApi}
           handleSaveTransConfig={handleSaveTransConfig}
+          aiConfig={aiConfig}
+          appSettings={appSettings}
+          updateAppSettings={updateAppSettings}
+          addProvider={addProvider}
+          updateProvider={updateProvider}
+          deleteProvider={deleteProvider}
+          setTranslationProviderId={setTranslationProviderId}
+          setConversionProviderId={setConversionProviderId}
+          handleLogout={handleLogout}
         />
       )}
 
       {/* ================= 文件夹删除弹窗 ================= */}
       {folderDeleteTarget && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setFolderDeleteTarget(null); }}>
-          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-md border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[130] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setFolderDeleteTarget(null); }}>
+          <div className="app-modal rounded-2xl p-6 w-full max-w-md border" onClick={e => e.stopPropagation()}>
             <h3 className={`font-bold text-lg mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
               删除文件夹&ldquo;{folderDeleteTarget.folderName}&rdquo;
             </h3>
@@ -104,13 +127,13 @@ export default function Modals({
 
       {/* ================= 标签页关闭警告弹窗 ================= */}
       {isCloseWarningOpen && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsCloseWarningOpen(false); }}>
-          <div className={`rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[140] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsCloseWarningOpen(false); }}>
+          <div className="app-modal rounded-2xl p-8 w-full max-w-sm text-center border" onClick={e => e.stopPropagation()}>
             <AlertTriangle className="mx-auto text-amber-500 mb-3" size={40}/>
             <h3 className={`font-bold text-xl mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>存在未保存的修改</h3>
             <p className={`text-sm mb-8 leading-relaxed ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>此工作区内容尚未保存，直接关闭将丢失您最近的更改。是否需要保存快照？</p>
             <div className="flex flex-col gap-3">
-              <button onClick={() => { setIsCloseWarningOpen(false); setSaveTitle(workspaces.find(w=>w.id===pendingCloseTabId)?.name || ''); setIsSaveModalOpen(true); }} className={`w-full py-3 text-sm font-bold text-white rounded-xl transition-all shadow-lg active:scale-[0.98] ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'}`}>去保存快照</button>
+              <button onClick={() => { clearSnapshotImageForm?.(); setIsCloseWarningOpen(false); setSaveTitle(workspaces.find(w=>w.id===pendingCloseTabId)?.name || ''); setIsSaveModalOpen(true); }} className={`w-full py-3 text-sm font-bold text-white rounded-xl transition-all shadow-lg active:scale-[0.98] ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'}`}>去保存快照</button>
               <button onClick={() => { setIsCloseWarningOpen(false); executeCloseTab(pendingCloseTabId); }} className={`w-full py-3 text-sm font-bold border rounded-xl transition-colors active:scale-[0.98] ${isDarkMode ? 'bg-red-950/30 border-red-900/50 text-red-400 hover:bg-red-900/40' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>不保存，直接关闭</button>
               <button onClick={() => { setIsCloseWarningOpen(false); setPendingCloseTabId(null); }} className={`w-full py-3 text-sm font-bold border rounded-xl transition-colors active:scale-[0.98] ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-800' : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200'}`}>取消</button>
             </div>
@@ -120,8 +143,8 @@ export default function Modals({
 
       {/* ================= 保存快照弹窗 ================= */}
       {isSaveModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) { setIsSaveModalOpen(false); setPendingCloseTabId(null); }}}>
-          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-sm border flex flex-col ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[110] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) closeSaveModal(); }}>
+          <div className="app-modal rounded-2xl p-6 w-full max-w-md border flex flex-col" onClick={e => e.stopPropagation()} onPaste={handleSnapshotImagePaste}>
             <h3 className={`font-bold mb-4 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>保存当前工作快照</h3>
             
             <div className={`max-h-32 mb-4 overflow-y-auto border rounded-lg p-1 custom-scrollbar ${isDarkMode ? 'border-zinc-800 bg-zinc-950/50' : 'border-gray-200 bg-gray-50/50'}`}>
@@ -141,8 +164,54 @@ export default function Modals({
               </div>
             </div>
 
+            <div className="mb-6 space-y-3">
+              <div
+                tabIndex={0}
+                className={`relative flex min-h-32 items-center justify-center overflow-hidden rounded-xl border border-dashed text-center text-xs outline-none transition-colors ${
+                  isDarkMode ? 'border-zinc-700 bg-zinc-950/60 text-zinc-500 focus:border-blue-700' : 'border-gray-300 bg-gray-50 text-gray-400 focus:border-blue-400'
+                }`}
+              >
+                {snapshotImageDataUrl ? (
+                  <>
+                    <img src={snapshotImageDataUrl} alt="提示词效果图" className="max-h-44 w-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => setSnapshotImageDataUrl('')}
+                      className={`absolute right-2 top-2 rounded-lg px-2 py-1 text-xs font-bold ${isDarkMode ? 'bg-zinc-900/90 text-zinc-300 hover:bg-zinc-800' : 'bg-white/90 text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      移除
+                    </button>
+                  </>
+                ) : (
+                  <div className="px-4 leading-6">在此粘贴生成的提示词效果图</div>
+                )}
+              </div>
+
+              {snapshotImageDataUrl && (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={snapshotImagePlatform}
+                    onChange={e => setSnapshotImagePlatform(e.target.value)}
+                    className={`h-9 rounded-lg border px-2 text-xs outline-none ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-300' : 'bg-white border-gray-300 text-gray-700'}`}
+                  >
+                    <option value="nanobanana2">Nano Banana 2</option>
+                    <option value="gptImage2">GPT Image 2</option>
+                    <option value="custom">自定义</option>
+                  </select>
+                  {snapshotImagePlatform === 'custom' && (
+                    <input
+                      value={snapshotImageCustomPlatform}
+                      onChange={e => setSnapshotImageCustomPlatform(e.target.value)}
+                      className={`h-9 min-w-0 flex-1 rounded-lg border px-2 text-xs outline-none ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-300 placeholder-zinc-600' : 'bg-white border-gray-300 text-gray-700 placeholder-gray-400'}`}
+                      placeholder="输入生成平台"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
-              <button onClick={() => { setIsSaveModalOpen(false); setPendingCloseTabId(null); }} className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>取消</button>
+              <button onClick={closeSaveModal} className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>取消</button>
               <button onClick={handlePreSave} className={`flex-1 py-2.5 text-sm font-bold text-white rounded-xl shadow-md transition-colors active:scale-95 ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500' : 'bg-blue-600 hover:bg-blue-700'}`}>确认保存</button>
             </div>
           </div>
@@ -151,8 +220,8 @@ export default function Modals({
 
       {/* ================= 导出选项弹窗 ================= */}
       {isExportModalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsExportModalOpen(false); }}>
-          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-xs border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[120] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsExportModalOpen(false); }}>
+          <div className="app-modal rounded-2xl p-6 w-full max-w-xs border" onClick={e => e.stopPropagation()}>
             <h3 className={`font-bold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}><Download size={20} className="text-blue-500"/> 导出数据</h3>
             <p className={`text-sm mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>请勾选需要导出的内容：</p>
             
@@ -244,8 +313,8 @@ export default function Modals({
 
       {/* ================= 导入模式选择弹窗 ================= */}
       {pendingImportPayload && (
-        <div className="fixed inset-0 z-[128] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) closeImportModeModal(); }}>
-          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-md border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[128] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) closeImportModeModal(); }}>
+          <div className="app-modal rounded-2xl p-6 w-full max-w-md border" onClick={e => e.stopPropagation()}>
             <h3 className={`font-bold mb-2 text-lg flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
               <AlertTriangle className="w-5 h-5 text-amber-500" /> 导入快照方式
             </h3>
@@ -271,8 +340,8 @@ export default function Modals({
 
       {/* ================= 同名快照冲突弹窗 ================= */}
       {isConflictModalOpen && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancelConflict(); }}>
-          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-sm border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[130] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancelConflict(); }}>
+          <div className="app-modal rounded-2xl p-6 w-full max-w-sm border" onClick={e => e.stopPropagation()}>
             <h3 className={`font-bold mb-2 text-lg flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
               <AlertTriangle className="w-5 h-5 text-amber-500" /> 发现同名快照
             </h3>
@@ -288,8 +357,8 @@ export default function Modals({
 
       {/* ================= 重置确认弹窗 ================= */}
       {isResetModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsResetModalOpen(false); }}>
-          <div className={`rounded-2xl shadow-2xl p-8 w-full max-w-xs text-center border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[110] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsResetModalOpen(false); }}>
+          <div className="app-modal rounded-2xl p-8 w-full max-w-xs text-center border" onClick={e => e.stopPropagation()}>
             <AlertTriangle className="mx-auto text-red-500 mb-3" size={40}/>
             <h3 className={`font-bold text-xl mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>确认重置？</h3>
             <p className={`text-sm mb-8 leading-relaxed ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>此操作将清空当前所有未保存的内容。历史快照和预设不会受到影响。</p>
@@ -303,8 +372,8 @@ export default function Modals({
 
       {/* ================= 修改密码弹窗 ================= */}
       {showChangePassword && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowChangePassword(false); }}>
-          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-xs border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-transparent'}`} onClick={e => e.stopPropagation()}>
+        <div className="app-overlay fixed inset-0 z-[150] flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowChangePassword(false); }}>
+          <div className="app-modal rounded-2xl p-6 w-full max-w-xs border" onClick={e => e.stopPropagation()}>
             <h3 className={`font-bold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}><Lock className="w-5 h-5 text-blue-500" /> 修改密码</h3>
             <div className="space-y-3 mb-6">
               <input type="password" value={changePasswordForm.oldPassword} onChange={e => setChangePasswordForm(prev => ({ ...prev, oldPassword: e.target.value }))} placeholder="旧密码" className={`w-full px-4 py-2.5 rounded-lg border outline-none text-sm ${isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-blue-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500'}`} />

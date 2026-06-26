@@ -69,10 +69,7 @@ const getAttemptEntry = (key) => {
   return existing;
 };
 
-const isRateLimited = (key) => {
-  const entry = getAttemptEntry(key);
-  return entry.count >= LOGIN_MAX_ATTEMPTS;
-};
+const isRateLimited = (key) => getAttemptEntry(key).count >= LOGIN_MAX_ATTEMPTS;
 
 const recordFailedAttempt = (key) => {
   const entry = getAttemptEntry(key);
@@ -373,7 +370,7 @@ const start = async () => {
   if (!Array.isArray(users)) await writeUsers([]);
 
   app.listen(PORT, () => {
-    console.log(`Prompt Builder API 已启动: http://localhost:${PORT}`);
+    console.log(`Promptly API 已启动: http://localhost:${PORT}`);
     console.log(`数据目录: ${DATA_DIR}`);
     console.log('用户认证: 已启用');
   });

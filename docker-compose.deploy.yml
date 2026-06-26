@@ -1,10 +1,9 @@
 version: '3.8'
 
 services:
-  prompt-builder:
+  promptly:
     image: smkgun/promptly:latest
-    user: root
-    container_name: prompt-builder
+    container_name: promptly
     ports:
       - "8080:3001"
     volumes:
@@ -14,9 +13,7 @@ services:
       - PORT=3001
       - DATA_DIR=/app/data
       - NODE_ENV=production
-      # ⚠️ 必须修改！不要使用默认值，用以下命令生成：
-      # openssl rand -base64 32
-      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
     deploy:
       resources:
         limits:

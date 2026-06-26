@@ -32,7 +32,7 @@ jobs:
       - name: Check build output
         run: |
           if [ ! -d "dist" ]; then
-            echo "❌ Build output not found!"
+            echo "Build output not found!"
             exit 1
           fi
-          echo "✅ Build successful - dist/ directory exists"
+          echo "Build successful - dist/ directory exists"

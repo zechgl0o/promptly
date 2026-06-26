@@ -11,7 +11,7 @@ import { sanitizeInputs, createDefaultWorkspace } from '../lib/parser';
  * 
  * 注意：数据加载和同步逻辑保留在 App.jsx 中（因为它们依赖 authFetch/authToken/savedPrompts 等外部状态）
  */
-export function useWorkspaces() {
+export function useWorkspaces({ maxWorkspaceTabs = 10 } = {}) {
   const [workspaces, setWorkspaces] = useState([createDefaultWorkspace(1)]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(workspaces[0].id);
   const [editingWorkspaceId, setEditingWorkspaceId] = useState(null);
@@ -59,13 +59,13 @@ export function useWorkspaces() {
   // 新建标签页
   const handleAddTab = useCallback(() => {
     setWorkspaces(prev => {
-      if (prev.length >= 5) return prev;
+      if (prev.length >= maxWorkspaceTabs) return prev;
       const newId = generateId();
       const newWs = { ...createDefaultWorkspace(prev.length + 1), id: newId };
       setActiveWorkspaceId(newId);
       return [...prev, newWs];
     });
-  }, []);
+  }, [maxWorkspaceTabs]);
 
   // 执行关闭标签页
   const executeCloseTab = useCallback((id) => {

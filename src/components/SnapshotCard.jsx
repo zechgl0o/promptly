@@ -6,7 +6,6 @@ export default function SnapshotCard({
   isNested = false,
   accentColor = null,
   hideFolderLabel = false,
-  // 数据
   isDarkMode,
   folders,
   isSnapshotBatchMode,
@@ -14,12 +13,11 @@ export default function SnapshotCard({
   snapshotPreviewMap,
   editingSavedTitleId,
   copiedDrawerId,
-  // 回调
   toggleSnapshotSelected,
   setEditingSavedTitleId,
   updateSavedTitle,
   deleteSnapshot,
-  updateActiveWorkspace,
+  loadSnapshotAsWorkspace,
   setIsDrawerOpen,
   executeCopy,
   promptAssignFolderForSnapshots,
@@ -28,7 +26,7 @@ export default function SnapshotCard({
   const isSelected = selectedSnapshotIdSet.has(snapshot.id);
 
   return (
-    <div className={isNested ? 'ml-4 pl-4 relative' : ''}>
+    <div className={isNested ? 'relative ml-4 pl-4' : ''}>
       {isNested && (
         <span
           className="absolute left-0 top-5 h-2.5 w-2.5 rounded-full"
@@ -37,10 +35,10 @@ export default function SnapshotCard({
       )}
 
       <div
-        className={`border rounded-xl p-4 transition-all group relative shadow-sm ${
+        className={`group relative rounded-xl border p-4 shadow-sm transition-all ${
           isDarkMode
-            ? 'bg-zinc-900/80 border-blue-900/30 hover:border-blue-700'
-            : 'bg-white border-gray-100 hover:border-blue-200'
+            ? 'border-blue-900/30 bg-zinc-900/80 hover:border-blue-700'
+            : 'border-gray-100 bg-white hover:border-blue-200'
         }`}
       >
         <div className="flex items-start gap-2">
@@ -50,7 +48,7 @@ export default function SnapshotCard({
               onClick={() => toggleSnapshotSelected(snapshot.id)}
               className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border transition-colors ${
                 isSelected
-                  ? 'bg-blue-600 border-blue-600 text-white'
+                  ? 'border-blue-600 bg-blue-600 text-white'
                   : (isDarkMode ? 'border-zinc-700 bg-zinc-950 text-zinc-500' : 'border-gray-300 bg-white text-gray-300')
               }`}
               title={isSelected ? '取消选择' : '选择快照'}
@@ -60,7 +58,7 @@ export default function SnapshotCard({
           )}
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="mb-2 flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 {editingSavedTitleId === snapshot.id ? (
                   <input
@@ -69,15 +67,15 @@ export default function SnapshotCard({
                     onChange={e => updateSavedTitle(snapshot.id, e.target.value)}
                     onBlur={() => setEditingSavedTitleId(null)}
                     onKeyDown={e => { if (e.key === 'Enter') setEditingSavedTitleId(null); }}
-                    className={`text-sm font-bold border rounded px-1.5 py-0.5 outline-none w-full ${
-                      isDarkMode ? 'bg-zinc-950 border-blue-700 text-zinc-200' : 'bg-blue-50 border-blue-300 text-gray-800'
+                    className={`w-full rounded border px-1.5 py-0.5 text-sm font-bold outline-none ${
+                      isDarkMode ? 'border-blue-700 bg-zinc-950 text-zinc-200' : 'border-blue-300 bg-blue-50 text-gray-800'
                     }`}
                   />
                 ) : (
                   <button
                     type="button"
                     onDoubleClick={() => setEditingSavedTitleId(snapshot.id)}
-                    className={`text-left text-sm font-bold truncate rounded px-1 transition-colors w-full ${
+                    className={`w-full rounded px-1 text-left text-sm font-bold truncate transition-colors ${
                       isDarkMode ? 'text-zinc-200 hover:bg-zinc-800' : 'text-gray-800 hover:bg-blue-50'
                     }`}
                     title="双击重命名"
@@ -86,14 +84,14 @@ export default function SnapshotCard({
                   </button>
                 )}
 
-                <div className={`text-[10px] mt-1 flex items-center gap-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                <div className={`mt-1 flex items-center gap-1 text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                   <Clock size={10} /> {new Date(snapshot.timestamp).toLocaleString()}
                 </div>
               </div>
 
               <button
                 onClick={() => deleteSnapshot(snapshot.id)}
-                className={`transition-colors opacity-0 group-hover:opacity-100 ${
+                className={`opacity-0 transition-colors group-hover:opacity-100 ${
                   isDarkMode ? 'text-zinc-600 hover:text-red-400' : 'text-gray-300 hover:text-red-500'
                 }`}
                 title="删除快照"
@@ -119,10 +117,10 @@ export default function SnapshotCard({
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  updateActiveWorkspace({ inputs: snapshot.inputs, separator: snapshot.separator || '\n\n', name: snapshot.title, isDirty: false });
-                  setIsDrawerOpen(false);
+                  if (loadSnapshotAsWorkspace) loadSnapshotAsWorkspace(snapshot);
+                  else setIsDrawerOpen(false);
                 }}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1 active:scale-95 ${
+                className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition-colors active:scale-95 ${
                   isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                 }`}
               >
@@ -130,7 +128,7 @@ export default function SnapshotCard({
               </button>
               <button
                 onClick={() => executeCopy(previewText, snapshot.id)}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 active:scale-95 ${
+                className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition-all active:scale-95 ${
                   copiedDrawerId === snapshot.id
                     ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-green-100 text-green-700')
                     : (isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
@@ -141,7 +139,7 @@ export default function SnapshotCard({
               </button>
               <button
                 onClick={() => promptAssignFolderForSnapshots([snapshot.id])}
-                className={`px-2.5 py-2 rounded-lg transition-colors ${
+                className={`rounded-lg px-2.5 py-2 transition-colors ${
                   isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-blue-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600'
                 }`}
                 title="加入或移出文件夹"

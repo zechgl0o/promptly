@@ -1,14 +1,21 @@
 {
   "name": "prompt-builder",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
+  "description": "Promptly",
   "type": "module",
+  "main": "electron/main.js",
+  "author": "Promptly Team",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
     "start": "node server.js",
+    "electron": "electron .",
+    "electron:dev": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --win",
+    "dist:dir": "npm run build && electron-builder --win --dir",
     "lint": "eslint src/ --ext .js,.jsx",
     "lint:fix": "eslint src/ --ext .js,.jsx --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
@@ -28,6 +35,8 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
@@ -38,5 +47,44 @@
     "prettier": "^3.8.3",
     "tailwindcss": "^3.4.17",
     "vite": "^6.0.5"
+  },
+  "build": {
+    "appId": "com.promptly.app",
+    "productName": "Promptly",
+    "copyright": "Copyright © 2024 Promptly Team",
+    "directories": {
+      "output": "release",
+      "buildResources": "public"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!**/node_modules/**/{test,tests,example,examples,docs,doc,benchmark,benchmarks}/**/*",
+      "!**/node_modules/**/{.github,.vscode}/**/*",
+      "!**/node_modules/**/*.{md,markdown,map,ts,flow,gz}"
+    ],
+    "afterPack": "scripts/prune-electron-package.cjs",
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "asar": {
+      "smartUnpack": true
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}.${ext}"
+    },
+    "compression": "maximum"
   }
 }
